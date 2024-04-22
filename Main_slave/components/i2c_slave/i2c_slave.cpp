@@ -1,12 +1,12 @@
 #include "i2c_slave.h"
 
 i2c_slave::i2c_slave(i2c_slave_config* slave_config) {
+    conf_slave.mode = I2C_MODE_SLAVE;
     conf_slave.sda_io_num = slave_config -> sda;
     conf_slave.scl_io_num = slave_config -> scl;
     conf_slave.slave.slave_addr = slave_config -> slaveAddr;
     conf_slave.sda_pullup_en = GPIO_PULLUP_ENABLE;
     conf_slave.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf_slave.mode = I2C_MODE_SLAVE;
     conf_slave.slave.addr_10bit_en = 0; // 7-bit slave address
     conf_slave.clk_flags = 0;
 }   
@@ -24,30 +24,20 @@ esp_err_t i2c_slave::begin() {
 }
 
 uint8_t i2c_slave::slave_read_buffer() {
-    uint8_t data[I2C_SLAVE_RX_BUF_LEN];
-    int bytes_received = i2c_slave_read_buffer(i2c_port, data, I2C_SLAVE_RX_BUF_LEN, 100);
+    int bytes_received = i2c_slave_read_buffer(I2C_NUM_0, pong, I2C_SLAVE_RX_BUF_LEN, 100 / portTICK_PERIOD_MS);
     int i = 0;
+    ESP_LOGI(TAG, "Bytes Received: %d", bytes_received);
     if(bytes_received > 0) {
-        for(i = 0; i < bytes_received; i++) {
-            if(data[i] == 1) break;
+        while(i < bytes_received) { // Corrected loop condition
+            if(pong[i] == 1) {
+                break;
+            }
+            i++;
         }
-        if(i - 1 == 0) {
-            return i; // return array index
-        }
+        ESP_LOGI(TAG, "Received Index: %d", i);
     }
-    return 0;
+    return i;
 }
 
-esp_err_t i2c_slave::slave_write_buffer(double* data, size_t array_size) {
-    size_t buffer_size = sizeof(double) * array_size;
-    uint8_t* buffer = (uint8_t*)malloc(buffer_size);
-    if (buffer == NULL) {
-        return ESP_ERR_NO_MEM;
-    }
-    memcpy(buffer, data, buffer_size);
-    esp_err_t err = i2c_slave_write_buffer(I2C_NUM_0, buffer, buffer_size, portMAX_DELAY);
-    free(buffer);
-    return err;
-}
 
 

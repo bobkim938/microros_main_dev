@@ -1,4 +1,3 @@
-#include <iostream>
 #include <driver/spi_master.h>
 #include <driver/gpio.h>
 #include "IMU_SPI.h"
@@ -28,6 +27,8 @@ i2c_slave_config i2c_config = {
 extern "C" void app_main(void)
 {   
     DK42688_SPI spi(&spi_config);
+    i2c_slave i2c(&i2c_config);
+    i2c.begin();
     spi.begin();
     spi.set_accel_fsr(AccelFSR::g16);
     spi.set_accODR(ODR::odr1k);
@@ -37,16 +38,11 @@ extern "C" void app_main(void)
         double ax = spi.get_accel_x();
         double ay = spi.get_accel_y();
         double az = spi.get_accel_z();
-        cout << "Accel X: " << ax << endl;
-        cout << "Accel Y: " << ay << endl;
-        cout << "Accel Z: " << az << endl;
         double gx = spi.get_gyro_x();
         double gy = spi.get_gyro_y();
         double gz = spi.get_gyro_z();
-        cout << "Gyro X: " << gx << endl;
-        cout << "Gyro Y: " << gy << endl;
-        cout << "Gyro Z: " << gz << endl;
         double imu[6] = {ax, ay, az, gx, gy, gz};
+        uint8_t index = i2c.slave_read_buffer();
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }   
