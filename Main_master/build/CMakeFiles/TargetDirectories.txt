@@ -653,3 +653,11 @@
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/i2c_master/CMakeFiles/install.dir
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/i2c_master/CMakeFiles/install/local.dir
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/i2c_master/CMakeFiles/install/strip.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/micro_ros_espidf_component/CMakeFiles/__idf_micro_ros_espidf_component.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/micro_ros_espidf_component/CMakeFiles/clean-microros.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/micro_ros_espidf_component/CMakeFiles/edit_cache.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/micro_ros_espidf_component/CMakeFiles/rebuild_cache.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/micro_ros_espidf_component/CMakeFiles/list_install_components.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/micro_ros_espidf_component/CMakeFiles/install.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/micro_ros_espidf_component/CMakeFiles/install/local.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/micro_ros_espidf_component/CMakeFiles/install/strip.dir

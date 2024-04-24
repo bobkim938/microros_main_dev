@@ -27,8 +27,6 @@ i2c_slave_config i2c_config = {
 extern "C" void app_main(void)
 {   
     DK42688_SPI spi(&spi_config);
-    i2c_slave i2c(&i2c_config);
-    i2c.begin();
     spi.begin();
     spi.set_accel_fsr(AccelFSR::g16);
     spi.set_accODR(ODR::odr1k);
@@ -42,8 +40,6 @@ extern "C" void app_main(void)
         double gy = spi.get_gyro_y();
         double gz = spi.get_gyro_z();
         double imu[6] = {ax, ay, az, gx, gy, gz};
-        uint8_t index = i2c.slave_read_buffer();
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }   
-

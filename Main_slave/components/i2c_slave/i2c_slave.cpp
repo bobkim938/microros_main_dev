@@ -1,43 +1,13 @@
 #include "i2c_slave.h"
 
 i2c_slave::i2c_slave(i2c_slave_config* slave_config) {
-    conf_slave.mode = I2C_MODE_SLAVE;
-    conf_slave.sda_io_num = slave_config -> sda;
-    conf_slave.scl_io_num = slave_config -> scl;
-    conf_slave.slave.slave_addr = slave_config -> slaveAddr;
-    conf_slave.sda_pullup_en = GPIO_PULLUP_ENABLE;
-    conf_slave.scl_pullup_en = GPIO_PULLUP_ENABLE;
-    conf_slave.slave.addr_10bit_en = 0; // 7-bit slave address
-    conf_slave.clk_flags = 0;
-}   
+    slv_conf.i2c_port = I2C_NUM_0;
+    slv_conf.sda_io_num = slave_config->sda;
+    slv_conf.scl_io_num = slave_config->scl;
+    slv_conf.clk_source = I2C_CLK_SRC_DEFAULT;
+    slv_conf.send_buf_depth = 256;
+    slv_conf.addr_bit_len = I2C_ADDR_BIT_LEN_7;
+    slv_conf.slave_addr = slave_config->slaveAddr;
 
-esp_err_t i2c_slave::begin() {
-    esp_err_t err = i2c_param_config(i2c_port, &conf_slave);
-    if(err != ESP_OK) {
-        return err;
-    }
-    err = i2c_driver_install(i2c_port, conf_slave.mode, I2C_SLAVE_RX_BUF_LEN, I2C_SLAVE_TX_BUF_LEN, 0);
-    if(err != ESP_OK) {
-        return err;
-    }
-    return ESP_OK;
+    ESP_ERROR_CHECK(i2c_new_slave_device(&slv_conf, &slv_handle));
 }
-
-uint8_t i2c_slave::slave_read_buffer() {
-    int bytes_received = i2c_slave_read_buffer(I2C_NUM_0, pong, I2C_SLAVE_RX_BUF_LEN, 100 / portTICK_PERIOD_MS);
-    int i = 0;
-    ESP_LOGI(TAG, "Bytes Received: %d", bytes_received);
-    if(bytes_received > 0) {
-        while(i < bytes_received) { // Corrected loop condition
-            if(pong[i] == 1) {
-                break;
-            }
-            i++;
-        }
-        ESP_LOGI(TAG, "Received Index: %d", i);
-    }
-    return i;
-}
-
-
-
