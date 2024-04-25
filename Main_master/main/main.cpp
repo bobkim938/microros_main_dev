@@ -23,15 +23,25 @@
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){printf("Failed status on line %d: %d. Continuing.\n",__LINE__,(int)temp_rc);}}
 
 rcl_publisher_t publisher;
-std_msgs__msg__Int32 msg;
+rcl_subscription_t subscriber;
+std_msgs__msg__Int32 send_msg;
+std_msgs__msg__Int32 recv_msg;
+
+uint8_t lev = 1;
 
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 {
 	RCLC_UNUSED(last_call_time);
 	if (timer != NULL) {
-		RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
-		msg.data++;
+        send_msg.data = gpio_get_level(GPIO_NUM_4);
+		RCSOFTCHECK(rcl_publish(&publisher, &send_msg, NULL));
 	}
+}
+
+void subscription_callback(const void * msgin)
+{
+	const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
+	lev = msg->data;
 }
 
 void micro_ros_task(void * arg)
@@ -44,18 +54,24 @@ void micro_ros_task(void * arg)
 
 	// create node
 	rcl_node_t node;
-	RCCHECK(rclc_node_init_default(&node, "esp32_int32_publisher", "", &support));
+	RCCHECK(rclc_node_init_default(&node, "high_low_sub_pub", "", &support));
 
 	// create publisher
 	RCCHECK(rclc_publisher_init_default(
 		&publisher,
 		&node,
 		ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-		"freertos_int32_publisher"));
+		"high_low_pub"));
+
+	RCCHECK(rclc_subscription_init_default(
+		&subscriber,
+		&node,
+		ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
+		"highLowCMD"));
 
 	// create timer,
 	rcl_timer_t timer;
-	const unsigned int timer_timeout = 1000;
+	const unsigned int timer_timeout = 100;
 	RCCHECK(rclc_timer_init_default(
 		&timer,
 		&support,
@@ -64,14 +80,15 @@ void micro_ros_task(void * arg)
 
 	// create executor
 	rclc_executor_t executor;
-	RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+	RCCHECK(rclc_executor_init(&executor, &support.context, 2, &allocator));
 	RCCHECK(rclc_executor_add_timer(&executor, &timer));
+	RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &recv_msg, &subscription_callback, ON_NEW_DATA));
 
-	msg.data = 0;
+	send_msg.data = 0;
 
 	while(1){
-		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
-		usleep(10000);
+		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(10));
+        gpio_set_level(GPIO_NUM_1, lev);
 	}
 
 	// free resources
@@ -85,8 +102,10 @@ static size_t uart_port = UART_NUM_0;
 
 extern "C" void app_main(void)
 {
+
     gpio_set_direction(GPIO_NUM_1, GPIO_MODE_OUTPUT);
     gpio_set_direction(GPIO_NUM_4, GPIO_MODE_INPUT);
+
 #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
 	rmw_uros_set_custom_transport(
 		true,
