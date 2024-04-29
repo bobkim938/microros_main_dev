@@ -64,5 +64,6 @@
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/usb/libusb.a
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/wifi_provisioning/libwifi_provisioning.a
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/main/libmain.a
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/IC_spi/libIC_spi.a
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/IMU_spi/libIMU_spi.a
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/i2c_slave/libi2c_slave.a

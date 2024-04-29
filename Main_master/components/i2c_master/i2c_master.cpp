@@ -19,3 +19,8 @@ esp_err_t i2c_master::add_slave_device(uint16_t slave_addr) {
     return ret;
 }
 
+esp_err_t i2c_master::i2c_transmit(uint8_t* data) {
+    ESP_LOGI(TAG, "Transmitting data: %d", *data);
+    esp_err_t ret = i2c_master_transmit(i2c_slave_handle, data, sizeof(data), -1);
+    return ret;
+}

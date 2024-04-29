@@ -2,6 +2,8 @@
 #include "driver/gpio.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/portmacro.h"
 
 #define ACK_CHECK_EN 0x1                        
 #define ACK_CHECK_DIS 0x0                      
@@ -18,6 +20,7 @@ class i2c_master {
         i2c_master(i2c_master_config* conf);
         esp_err_t add_slave_device(uint16_t slave_addr);
         esp_err_t i2c_masterSendCMD(uint8_t* data_wr, size_t size);
+        esp_err_t i2c_transmit(uint8_t* data);
     
     private:
         i2c_master_bus_config_t i2c_mst_config = {};

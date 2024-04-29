@@ -199,5 +199,79 @@ double DK42688_SPI::get_gyro_z() {
     return gyro_z;
 }
 
+int16_t DK42688_SPI::get_ax0() {
+    read_spi(ICM42688reg::ACCEL_DATA_X0);
+    int16_t accel_data_x0 = recvbuf[0];
+    return accel_data_x0;
+}
+
+int16_t DK42688_SPI::get_ax1() {
+    read_spi(ICM42688reg::ACCEL_DATA_X1);
+    int16_t accel_data_x1 = recvbuf[0];
+    return accel_data_x1;
+}
+
+int16_t DK42688_SPI::get_ay0() {
+    read_spi(ICM42688reg::ACCEL_DATA_Y0);
+    int16_t accel_data_y0 = recvbuf[0];
+    return accel_data_y0;
+}
+
+int16_t DK42688_SPI::get_ay1() {
+    read_spi(ICM42688reg::ACCEL_DATA_Y1);
+    int16_t accel_data_y1 = recvbuf[0];
+    return accel_data_y1;
+}
+
+int16_t DK42688_SPI::get_az0() {
+    read_spi(ICM42688reg::ACCEL_DATA_Z0);
+    int16_t accel_data_z0 = recvbuf[0];
+    return accel_data_z0;
+}
+
+int16_t DK42688_SPI::get_az1() {
+    read_spi(ICM42688reg::ACCEL_DATA_Z1);
+    int16_t accel_data_z1 = recvbuf[0];
+    return accel_data_z1;
+}
+
+int16_t DK42688_SPI::get_gx0() {
+    read_spi(ICM42688reg::GYRO_DATA_X0);
+    int16_t gyro_data_x0 = recvbuf[0];
+    return gyro_data_x0;
+}
+
+int16_t DK42688_SPI::get_gx1() {
+    read_spi(ICM42688reg::GYRO_DATA_X1);
+    int16_t gyro_data_x1 = recvbuf[0];
+    return gyro_data_x1;
+}
+
+int16_t DK42688_SPI::get_gy0() {
+    read_spi(ICM42688reg::GYRO_DATA_Y0);
+    int16_t gyro_data_y0 = recvbuf[0];
+    return gyro_data_y0;
+}
+
+int16_t DK42688_SPI::get_gy1() {
+    read_spi(ICM42688reg::GYRO_DATA_Y1);
+    int16_t gyro_data_y1 = recvbuf[0];
+    return gyro_data_y1;
+}
+
+int16_t DK42688_SPI::get_gz0() {
+    read_spi(ICM42688reg::GYRO_DATA_Z0);
+    int16_t gyro_data_z0 = recvbuf[0];
+    return gyro_data_z0;
+}
+
+int16_t DK42688_SPI::get_gz1() {
+    read_spi(ICM42688reg::GYRO_DATA_Z1);
+    int16_t gyro_data_z1 = recvbuf[0];
+    return gyro_data_z1;
+}
+
+
+
 
 
