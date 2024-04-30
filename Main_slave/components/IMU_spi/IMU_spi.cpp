@@ -47,7 +47,7 @@ esp_err_t DK42688_SPI::begin() {
     ret = write_spi(ICM42688reg::PWR_MGMT0, 0x0f, 2); // turn on gyro and accel sensors in LN mode
     if(ret != ESP_OK) return ret;
     ret = read_spi(ICM42688reg::PWR_MGMT0);
-    printf("Received data: 0x%02X\n", recvbuf[0]);
+    // printf("Received data: 0x%02X\n", recvbuf[0]);
     return ret;
 }
 

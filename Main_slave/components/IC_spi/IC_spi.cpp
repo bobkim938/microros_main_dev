@@ -7,8 +7,8 @@ IC_SPI::IC_SPI(IC_SPI_Config *spi_config) {
     busESP.quadwp_io_num = -1;
     busESP.quadhd_io_num = -1; 
 
-    IC_dev.command_bits = 8;
-    IC_dev.address_bits = 0;
+    IC_dev.command_bits = 8; // 4 bit OP-CODE
+    IC_dev.address_bits = 8; // 8 bit ADDRESS
     IC_dev.dummy_bits = 0;
     IC_dev.clock_speed_hz = 1000000; // 1 MHz
     IC_dev.duty_cycle_pos = 128;
@@ -23,5 +23,22 @@ esp_err_t IC_SPI::begin() {
     if(ret != ESP_OK) return ret;
     ret = spi_bus_add_device(SPI3_HOST, &IC_dev, &handle);
     if(ret != ESP_OK) return ret;
-    
+    return ret;
 }
+
+esp_err_t IC_SPI::test() {
+    esp_err_t ret = read_spi(AM_IP_4kreg::CFG1_A, RD0);
+    printf("Received data: 0x%02X\n", recvbuf[0]);
+    return ret;
+}
+
+esp_err_t IC_SPI::read_spi(uint8_t reg, uint8_t op_code) {
+    t.length = 24;
+    t.cmd = op_code;
+    t.addr = reg;
+    t.tx_buffer = 0;
+    t.rx_buffer = recvbuf;
+    esp_err_t ret = spi_device_transmit(handle, &t);
+    return ret;
+}
+
