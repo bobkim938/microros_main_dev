@@ -38,9 +38,9 @@ esp_err_t DK42688_SPI::write_spi(uint8_t reg, uint8_t data, uint8_t len) {
 }
 
 esp_err_t DK42688_SPI::begin() {
-    ret = spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    ret = spi_bus_initialize(SPI3_HOST, &buscfg, SPI_DMA_CH_AUTO);
     if(ret != ESP_OK) return ret;
-    ret = spi_bus_add_device(SPI2_HOST, &devcfg, &handle);
+    ret = spi_bus_add_device(SPI3_HOST, &devcfg, &handle);
     if(ret != ESP_OK) return ret;
     ret = who_am_i();
     if(ret != ESP_OK) return ret;
@@ -55,7 +55,7 @@ esp_err_t DK42688_SPI::reset() {
     ret = write_spi(ICM42688reg::DEVICE_CONFIG, 0x01, 2);
     return ret;
 }
-
+  
 esp_err_t DK42688_SPI::who_am_i() {
     ret = read_spi(ICM42688reg::WHO_AM_I);
     // printf("Received data: 0x%02X\n", recvbuf[0]);

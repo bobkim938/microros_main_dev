@@ -55,5 +55,4 @@ extern "C" void app_main(void)
         // cout << "Gyro Z: " << gz << endl;
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
-
 }   
