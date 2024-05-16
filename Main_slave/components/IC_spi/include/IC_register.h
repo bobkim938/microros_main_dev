@@ -19,7 +19,7 @@ namespace AM_IP_4kreg {
     static constexpr uint8_t STAT_C = 0x0A;
     static constexpr uint8_t STAT_D = 0x0B;
 
-    static constexpr uint8_t CFG1_A = 0x0C;
+    static constexpr uint8_t CFG1_A = 0x0C; // 0b00001100
     static constexpr uint8_t CFG1_B = 0x0D;
     static constexpr uint8_t CFG1_C = 0x0E;
     static constexpr uint8_t CFG1_D = 0x0F;

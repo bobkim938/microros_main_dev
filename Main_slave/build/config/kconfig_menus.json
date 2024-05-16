@@ -5981,6 +5981,458 @@
     {
         "children": [
             {
+                "children": [],
+                "depends_on": null,
+                "help": "Stack size in Bytes of the micro-ROS app",
+                "id": "MICRO_ROS_APP_STACK",
+                "name": "MICRO_ROS_APP_STACK",
+                "range": null,
+                "title": "Stack the micro-ROS app (Bytes)",
+                "type": "int"
+            },
+            {
+                "children": [],
+                "depends_on": null,
+                "help": "Priority of micro-ros task higher value means higher priority",
+                "id": "MICRO_ROS_APP_TASK_PRIO",
+                "name": "MICRO_ROS_APP_TASK_PRIO",
+                "range": null,
+                "title": "Priority of the micro-ROS app",
+                "type": "int"
+            }
+        ],
+        "depends_on": null,
+        "id": "micro-ros-example-app-settings",
+        "title": "micro-ROS example-app settings",
+        "type": "menu"
+    },
+    {
+        "children": [
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": "<choice>",
+                        "help": null,
+                        "id": "MICRO_ROS_ESP_XRCE_DDS_MIDDLEWARE",
+                        "name": "MICRO_ROS_ESP_XRCE_DDS_MIDDLEWARE",
+                        "range": null,
+                        "title": "micro-ROS over eProsima Micro XRCE-DDS",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "<choice>",
+                        "help": null,
+                        "id": "MICRO_ROS_ESP_EMBEDDEDRTPS_MIDDLEWARE",
+                        "name": "MICRO_ROS_ESP_EMBEDDEDRTPS_MIDDLEWARE",
+                        "range": null,
+                        "title": "micro-ROS over embeddedRTPS (EXPERIMENTAL)",
+                        "type": "bool"
+                    }
+                ],
+                "depends_on": null,
+                "help": null,
+                "id": "micro-ros-settings-micro-ros-middleware",
+                "name": null,
+                "title": "micro-ROS middleware",
+                "type": "choice"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": "<choice>",
+                        "help": null,
+                        "id": "MICRO_ROS_ESP_NETIF_WLAN",
+                        "name": "MICRO_ROS_ESP_NETIF_WLAN",
+                        "range": null,
+                        "title": "WLAN interface",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "<choice>",
+                        "help": null,
+                        "id": "MICRO_ROS_ESP_NETIF_ENET",
+                        "name": "MICRO_ROS_ESP_NETIF_ENET",
+                        "range": null,
+                        "title": "Ethernet interface",
+                        "type": "bool"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_XRCE_DDS_MIDDLEWARE && <choice>",
+                        "help": null,
+                        "id": "MICRO_ROS_ESP_UART_TRANSPORT",
+                        "name": "MICRO_ROS_ESP_UART_TRANSPORT",
+                        "range": null,
+                        "title": "Micro XRCE-DDS over UART. Check int32_publisher_custom_transport",
+                        "type": "bool"
+                    }
+                ],
+                "depends_on": null,
+                "help": null,
+                "id": "micro-ros-settings-micro-ros-network-interface-select",
+                "name": null,
+                "title": "micro-ROS network interface select",
+                "type": "choice"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_NETIF_WLAN",
+                        "help": "SSID (network name) for the example to connect to.",
+                        "id": "ESP_WIFI_SSID",
+                        "name": "ESP_WIFI_SSID",
+                        "range": null,
+                        "title": "WiFi SSID",
+                        "type": "string"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_NETIF_WLAN",
+                        "help": "WiFi password (WPA or WPA2) for the example to use.",
+                        "id": "ESP_WIFI_PASSWORD",
+                        "name": "ESP_WIFI_PASSWORD",
+                        "range": null,
+                        "title": "WiFi Password",
+                        "type": "string"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_NETIF_WLAN",
+                        "help": "Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.",
+                        "id": "ESP_MAXIMUM_RETRY",
+                        "name": "ESP_MAXIMUM_RETRY",
+                        "range": null,
+                        "title": "Maximum retry",
+                        "type": "int"
+                    }
+                ],
+                "depends_on": "MICRO_ROS_ESP_NETIF_WLAN",
+                "id": "micro-ros-settings-wifi-configuration",
+                "title": "WiFi Configuration",
+                "type": "menu"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_NETIF_ENET",
+                        "help": null,
+                        "id": "MICRO_ROS_USE_SPI_ETHERNET",
+                        "name": "MICRO_ROS_USE_SPI_ETHERNET",
+                        "range": null,
+                        "title": null,
+                        "type": "bool"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "IDF_TARGET_ESP32 && <choice MICRO_ROS_ETHERNET_TYPE>",
+                                "help": "Select internal Ethernet MAC controller.",
+                                "id": "MICRO_ROS_USE_INTERNAL_ETHERNET",
+                                "name": "MICRO_ROS_USE_INTERNAL_ETHERNET",
+                                "range": null,
+                                "title": "Internal EMAC",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice MICRO_ROS_ETHERNET_TYPE>",
+                                "help": "Select external SPI-Ethernet module (DM9051).",
+                                "id": "MICRO_ROS_USE_DM9051",
+                                "name": "MICRO_ROS_USE_DM9051",
+                                "range": null,
+                                "title": "DM9051 Module",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice MICRO_ROS_ETHERNET_TYPE>",
+                                "help": "Select external SPI-Ethernet module (W5500).",
+                                "id": "MICRO_ROS_USE_W5500",
+                                "name": "MICRO_ROS_USE_W5500",
+                                "range": null,
+                                "title": "W5500 Module",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": "MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Select which kind of Ethernet will be used in the example.",
+                        "id": "micro-ros-settings-ethernet-configuration-ethernet-type",
+                        "name": "MICRO_ROS_ETHERNET_TYPE",
+                        "title": "Ethernet Type",
+                        "type": "choice"
+                    },
+                    {
+                        "children": [
+                            {
+                                "children": [],
+                                "depends_on": "<choice MICRO_ROS_ETH_PHY_MODEL>",
+                                "help": "IP101 is a single port 10/100 MII/RMII/TP/Fiber Fast Ethernet Transceiver.\nGoto http://www.icplus.com.tw/pp-IP101G.html for more information about it.",
+                                "id": "MICRO_ROS_ETH_PHY_IP101",
+                                "name": "MICRO_ROS_ETH_PHY_IP101",
+                                "range": null,
+                                "title": "IP101",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice MICRO_ROS_ETH_PHY_MODEL>",
+                                "help": "RTL8201F/SR8201F is a single port 10/100Mb Ethernet Transceiver with auto MDIX.\nGoto http://www.corechip-sz.com/productsview.asp?id=22 for more information about it.",
+                                "id": "MICRO_ROS_ETH_PHY_RTL8201",
+                                "name": "MICRO_ROS_ETH_PHY_RTL8201",
+                                "range": null,
+                                "title": "RTL8201/SR8201",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice MICRO_ROS_ETH_PHY_MODEL>",
+                                "help": "LAN8720A is a small footprint RMII 10/100 Ethernet Transceiver with HP Auto-MDIX Support.\nGoto https://www.microchip.com/LAN8720A for more information about it.",
+                                "id": "MICRO_ROS_ETH_PHY_LAN8720",
+                                "name": "MICRO_ROS_ETH_PHY_LAN8720",
+                                "range": null,
+                                "title": "LAN8720",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice MICRO_ROS_ETH_PHY_MODEL>",
+                                "help": "DP83848 is a single port 10/100Mb/s Ethernet Physical Layer Transceiver.\nGoto http://www.ti.com/product/DP83848J for more information about it.",
+                                "id": "MICRO_ROS_ETH_PHY_DP83848",
+                                "name": "MICRO_ROS_ETH_PHY_DP83848",
+                                "range": null,
+                                "title": "DP83848",
+                                "type": "bool"
+                            },
+                            {
+                                "children": [],
+                                "depends_on": "<choice MICRO_ROS_ETH_PHY_MODEL>",
+                                "help": "The KSZ8041 is a single supply 10Base-T/100Base-TX Physical Layer Transceiver.\nGoto https://www.microchip.com/wwwproducts/en/KSZ8041 for more information about it.",
+                                "id": "MICRO_ROS_ETH_PHY_KSZ8041",
+                                "name": "MICRO_ROS_ETH_PHY_KSZ8041",
+                                "range": null,
+                                "title": "KSZ8041",
+                                "type": "bool"
+                            }
+                        ],
+                        "depends_on": "MICRO_ROS_USE_INTERNAL_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Select the Ethernet PHY device to use in the example.",
+                        "id": "micro-ros-settings-ethernet-configuration-ethernet-phy-device",
+                        "name": "MICRO_ROS_ETH_PHY_MODEL",
+                        "title": "Ethernet PHY Device",
+                        "type": "choice"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_USE_INTERNAL_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the GPIO number used by SMI MDC.",
+                        "id": "MICRO_ROS_ETH_MDC_GPIO",
+                        "name": "MICRO_ROS_ETH_MDC_GPIO",
+                        "range": null,
+                        "title": "SMI MDC GPIO number",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_USE_INTERNAL_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the GPIO number used by SMI MDIO.",
+                        "id": "MICRO_ROS_ETH_MDIO_GPIO",
+                        "name": "MICRO_ROS_ETH_MDIO_GPIO",
+                        "range": null,
+                        "title": "SMI MDIO GPIO number",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_USE_SPI_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the SPI host used to communicate with the SPI Ethernet Controller.",
+                        "id": "MICRO_ROS_ETH_SPI_HOST",
+                        "name": "MICRO_ROS_ETH_SPI_HOST",
+                        "range": null,
+                        "title": "SPI Host Number",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_USE_SPI_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the GPIO number used by SPI SCLK.",
+                        "id": "MICRO_ROS_ETH_SPI_SCLK_GPIO",
+                        "name": "MICRO_ROS_ETH_SPI_SCLK_GPIO",
+                        "range": null,
+                        "title": "SPI SCLK GPIO number",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_USE_SPI_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the GPIO number used by SPI MOSI.",
+                        "id": "MICRO_ROS_ETH_SPI_MOSI_GPIO",
+                        "name": "MICRO_ROS_ETH_SPI_MOSI_GPIO",
+                        "range": null,
+                        "title": "SPI MOSI GPIO number",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_USE_SPI_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the GPIO number used by SPI MISO.",
+                        "id": "MICRO_ROS_ETH_SPI_MISO_GPIO",
+                        "name": "MICRO_ROS_ETH_SPI_MISO_GPIO",
+                        "range": null,
+                        "title": "SPI MISO GPIO number",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_USE_SPI_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the GPIO number used by SPI CS.",
+                        "id": "MICRO_ROS_ETH_SPI_CS_GPIO",
+                        "name": "MICRO_ROS_ETH_SPI_CS_GPIO",
+                        "range": null,
+                        "title": "SPI CS GPIO number",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_USE_SPI_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the clock speed (MHz) of SPI interface.",
+                        "id": "MICRO_ROS_ETH_SPI_CLOCK_MHZ",
+                        "name": "MICRO_ROS_ETH_SPI_CLOCK_MHZ",
+                        "range": null,
+                        "title": "SPI clock speed (MHz)",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_USE_SPI_ETHERNET && MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the GPIO number used by the SPI Ethernet module interrupt line.",
+                        "id": "MICRO_ROS_ETH_SPI_INT_GPIO",
+                        "name": "MICRO_ROS_ETH_SPI_INT_GPIO",
+                        "range": null,
+                        "title": "Interrupt GPIO number",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set the GPIO number used to reset PHY chip.\nSet to -1 to disable PHY chip hardware reset.",
+                        "id": "MICRO_ROS_ETH_PHY_RST_GPIO",
+                        "name": "MICRO_ROS_ETH_PHY_RST_GPIO",
+                        "range": null,
+                        "title": "PHY Reset GPIO number",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_NETIF_ENET",
+                        "help": "Set PHY address according your board schematic.",
+                        "id": "MICRO_ROS_ETH_PHY_ADDR",
+                        "name": "MICRO_ROS_ETH_PHY_ADDR",
+                        "range": null,
+                        "title": "PHY Address",
+                        "type": "int"
+                    }
+                ],
+                "depends_on": "MICRO_ROS_ESP_NETIF_ENET",
+                "id": "micro-ros-settings-ethernet-configuration",
+                "title": "Ethernet Configuration",
+                "type": "menu"
+            },
+            {
+                "children": [],
+                "depends_on": "MICRO_ROS_ESP_XRCE_DDS_MIDDLEWARE && !MICRO_ROS_ESP_UART_TRANSPORT",
+                "help": "micro-ROS Agent IP.",
+                "id": "MICRO_ROS_AGENT_IP",
+                "name": "MICRO_ROS_AGENT_IP",
+                "range": null,
+                "title": "micro-ROS Agent IP",
+                "type": "string"
+            },
+            {
+                "children": [],
+                "depends_on": "MICRO_ROS_ESP_XRCE_DDS_MIDDLEWARE && !MICRO_ROS_ESP_UART_TRANSPORT",
+                "help": "micro-ROS Agent port.",
+                "id": "MICRO_ROS_AGENT_PORT",
+                "name": "MICRO_ROS_AGENT_PORT",
+                "range": null,
+                "title": "micro-ROS Agent Port",
+                "type": "string"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_UART_TRANSPORT",
+                        "help": "Select Tx Down pin for uart connection or -1 for no change (Only used if serial transport is used for microros).",
+                        "id": "MICROROS_UART_TXD",
+                        "name": "MICROROS_UART_TXD",
+                        "range": [
+                            -1,
+                            33
+                        ],
+                        "title": "UART TX pin",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_UART_TRANSPORT",
+                        "help": "Select Rx Down pin for uart connection or -1 for no change (Only used if serial transport is used for microros).",
+                        "id": "MICROROS_UART_RXD",
+                        "name": "MICROROS_UART_RXD",
+                        "range": [
+                            -1,
+                            33
+                        ],
+                        "title": "UART RX pin",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_UART_TRANSPORT",
+                        "help": "Select RTS Down pin for uart connection or -1 for no change (Only used if serial transport is used for microros).",
+                        "id": "MICROROS_UART_RTS",
+                        "name": "MICROROS_UART_RTS",
+                        "range": [
+                            -1,
+                            33
+                        ],
+                        "title": "UART RTS pin",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": "MICRO_ROS_ESP_UART_TRANSPORT",
+                        "help": "Select CTS Down pin for uart connection or -1 for no change (Only used if serial transport is used for microros).",
+                        "id": "MICROROS_UART_CTS",
+                        "name": "MICROROS_UART_CTS",
+                        "range": [
+                            -1,
+                            33
+                        ],
+                        "title": "UART CTS pin",
+                        "type": "int"
+                    }
+                ],
+                "depends_on": "MICRO_ROS_ESP_UART_TRANSPORT",
+                "id": "micro-ros-settings-uart-settings",
+                "title": "UART Settings",
+                "type": "menu"
+            }
+        ],
+        "depends_on": null,
+        "id": "micro-ros-settings",
+        "title": "micro-ROS Settings",
+        "type": "menu"
+    },
+    {
+        "children": [
+            {
                 "children": [
                     {
                         "children": [],
@@ -18167,10 +18619,7 @@
                                         "help": "Timeout period configuration for the Task Watchdog Timer in seconds.\nThis is also configurable at run time (see Task Watchdog Timer API Reference)",
                                         "id": "ESP_TASK_WDT_TIMEOUT_S",
                                         "name": "ESP_TASK_WDT_TIMEOUT_S",
-                                        "range": [
-                                            1,
-                                            60
-                                        ],
+                                        "range": null,
                                         "title": "Task Watchdog timeout period (seconds)",
                                         "type": "int"
                                     },

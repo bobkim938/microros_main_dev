@@ -1,6 +1,6 @@
-set(CMAKE_HOST_SYSTEM "Darwin-23.4.0")
+set(CMAKE_HOST_SYSTEM "Darwin-23.5.0")
 set(CMAKE_HOST_SYSTEM_NAME "Darwin")
-set(CMAKE_HOST_SYSTEM_VERSION "23.4.0")
+set(CMAKE_HOST_SYSTEM_VERSION "23.5.0")
 set(CMAKE_HOST_SYSTEM_PROCESSOR "arm64")
 
 include("/Users/kimminjoong/esp/v5.2.1/esp-idf/tools/cmake/toolchain-esp32s3.cmake")
