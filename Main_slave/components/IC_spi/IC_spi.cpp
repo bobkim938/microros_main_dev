@@ -15,8 +15,8 @@ IC_SPI::IC_SPI(IC_SPI_Config *spi_config) {
     IC_dev.mode = 0;
     IC_dev.spics_io_num = spi_config->cs; 
     IC_dev.cs_ena_pretrans = 0;
-    IC_dev.cs_ena_posttrans = 0; 
-    IC_dev.queue_size = 16;
+    IC_dev.cs_ena_posttrans = 1; 
+    IC_dev.queue_size = 3;
 }
 
 esp_err_t IC_SPI::begin() {
@@ -28,7 +28,7 @@ esp_err_t IC_SPI::begin() {
 }
 
 esp_err_t IC_SPI::test() { // NEED MODIFICATION
-    esp_err_t ret = read_spi(AM_IP_4kreg::CFG1_A, 1, RD0);
+    esp_err_t ret = read_spi(AM_IP_4kreg::CFG1_A, 2, RD0);
     printf("Received data[0]: 0x%02X\n", recvbuf[0]);
     ret = read_spi(0x00, 2, RD1);
     printf("Received data[0]: 0x%02X\n", recvbuf[0]);
