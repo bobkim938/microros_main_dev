@@ -50,6 +50,20 @@ esp_err_t DK42688_SPI::begin() {
     vTaskDelay(5);
     ret = read_spi(ICM42688reg::PWR_MGMT0);
     // printf("Received data: 0x%02X\n", recvbuf[0]);
+    set_accODR(ODR::odr1k);
+    vTaskDelay(1);
+    set_gyro_fsr(GyroFSR::dps2000);
+    vTaskDelay(1);
+    set_gyroODR(ODR::odr1k);
+    vTaskDelay(1);
+    for(int i = 0; i < 500; i++) {
+        gyro_bias[0] += get_gyro_x(1);
+        gyro_bias[1] += get_gyro_y(1);
+        gyro_bias[2] += get_gyro_z(1);
+    }
+    gyro_bias[0] /= 500.0;
+    gyro_bias[1] /= 500.0;
+    gyro_bias[2] /= 500.0;
     return ret;
 }
 
@@ -171,33 +185,42 @@ double DK42688_SPI::get_accel_z() {
     return acc_z;
 }
 
-double DK42688_SPI::get_gyro_x() {
+double DK42688_SPI::get_gyro_x(uint8_t gb_flg) {
     read_spi(ICM42688reg::GYRO_DATA_X0);
     int16_t gyro_data_x0 = recvbuf[0];  
     read_spi(ICM42688reg::GYRO_DATA_X1);
     int16_t gyro_data_x1 = recvbuf[0];  
     int16_t gyro_x_raw = (gyro_data_x1 << 8) | gyro_data_x0;  
     double gyro_x = gyro_x_raw * (gyro_fsr / 32768.0);  
+    if(gb_flg == 0) {
+        gyro_x -= gyro_bias[0];
+    }
     return gyro_x;
 }
 
-double DK42688_SPI::get_gyro_y() {
+double DK42688_SPI::get_gyro_y(uint8_t gb_flg) {
     read_spi(ICM42688reg::GYRO_DATA_Y0);
     int16_t gyro_data_y0 = recvbuf[0];  
     read_spi(ICM42688reg::GYRO_DATA_Y1);
     int16_t gyro_data_y1 = recvbuf[0];  
     int16_t gyro_y_raw = (gyro_data_y1 << 8) | gyro_data_y0;  
     double gyro_y = gyro_y_raw * (gyro_fsr / 32768.0);  
+    if(gb_flg == 0) {
+        gyro_y -= gyro_bias[1];
+    }
     return gyro_y;
 }
 
-double DK42688_SPI::get_gyro_z() {
+double DK42688_SPI::get_gyro_z(uint8_t gb_flg) {
     read_spi(ICM42688reg::GYRO_DATA_Z0);
     int16_t gyro_data_z0 = recvbuf[0]; 
     read_spi(ICM42688reg::GYRO_DATA_Z1);
     int16_t gyro_data_z1 = recvbuf[0]; 
     int16_t gyro_z_raw = (gyro_data_z1 << 8) | gyro_data_z0;  
     double gyro_z = gyro_z_raw * (gyro_fsr / 32768.0);  
+    if(gb_flg == 0) {
+        gyro_z -= gyro_bias[2];
+    }
     return gyro_z;
 }
 

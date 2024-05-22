@@ -62,9 +62,9 @@ class DK42688_SPI {
         double get_accel_x();
         double get_accel_y();
         double get_accel_z();
-        double get_gyro_x();
-        double get_gyro_y();
-        double get_gyro_z();
+        double get_gyro_x(uint8_t gb_flg = 0);
+        double get_gyro_y(uint8_t gb_flg = 0);
+        double get_gyro_z(uint8_t gb_flg = 0);
 
 
         int16_t get_ax0();
@@ -90,6 +90,7 @@ class DK42688_SPI {
         uint8_t recvbuf[1] = {0};
         float gyro_fsr = 2000.0;
         float accel_fsr = 16.0;
+        double gyro_bias[3] = {};
         
         esp_err_t read_spi(uint8_t reg);
         esp_err_t write_spi(uint8_t reg, uint8_t data, uint8_t len);
