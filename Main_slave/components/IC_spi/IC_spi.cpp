@@ -29,10 +29,13 @@ esp_err_t IC_SPI::begin() {
 
 esp_err_t IC_SPI::test() { // NEED MODIFICATION
     esp_err_t ret = read_spi(AM_IP_4kreg::CFG1_A, 2, RD0);
+    vTaskDelay(10/portTICK_PERIOD_MS);
     printf("Received data[0]: 0x%02X\n", recvbuf[0]);
     ret = read_spi(0x00, 2, RD1);
+    vTaskDelay(10/portTICK_PERIOD_MS);
     printf("Received data[0]: 0x%02X\n", recvbuf[0]);
     ret = read_spi(0x00, 2, NOP);
+    vTaskDelay(10/portTICK_PERIOD_MS);
     printf("Received data[0]: 0x%02X\n", recvbuf[0]);
     return ret;
 }
