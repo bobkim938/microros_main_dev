@@ -71,7 +71,7 @@ void node_init() {
 		&publisher,
 		&node,
 		ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
-		"IMU_data"));
+		"imu/data_raw"));
     rclc_executor_t executor;
 	RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
 }
@@ -79,21 +79,15 @@ void node_init() {
 extern "C" void app_main(void)
 {   
     // IC_SPI ic(&IC_spi_config);
-    // // gpio_set_direction(GPIO_NUM_15, GPIO_MODE_OUTPUT);
     // gpio_set_direction(GPIO_NUM_8, GPIO_MODE_OUTPUT);
     // gpio_set_level(GPIO_NUM_7, 1);
     // vTaskDelay(10);
     // gpio_set_level(GPIO_NUM_8, 1);
     // vTaskDelay(5000 /portTICK_PERIOD_MS);
     // ic.begin();
-    // ic.test();
-    // while(1) {
-    //     gpio_set_level(GPIO_NUM_15, 1);
-    // }
     // while(1) {
     //     ic.test();
     // }
-
     #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
 	rmw_uros_set_custom_transport(
 		true,
@@ -109,26 +103,26 @@ extern "C" void app_main(void)
     node_init();
     DK42688_SPI spi(&IMU_spi_config);
     spi.begin();
+    rosidl_runtime_c__String frame_id;
+    frame_id.data = "imu_link";
+    frame_id.size = strlen(frame_id.data);
+    frame_id.capacity = strlen(frame_id.data) + 1;
     while(1) {
+        imu_msg.header.frame_id = frame_id;
+        imu_msg.header.stamp.sec = esp_log_timestamp()/1000;
+        imu_msg.header.stamp.nanosec = esp_log_timestamp()%1000 * 1000000;
         double ax = spi.get_accel_x();
         imu_msg.linear_acceleration.x = ax; 
-        cout << "Accel X: " << ax << " ";
         double ay = spi.get_accel_y();
         imu_msg.linear_acceleration.y = ay;
-        cout << "Accel Y: " << ay << " ";
         double az = spi.get_accel_z();
         imu_msg.linear_acceleration.z = az;
-        cout << "Accel Z: " << az << " ";
         double gx = spi.get_gyro_x();
         imu_msg.angular_velocity.x = gx;
-        cout << "Gyro X: " << gx << " ";
         double gy = spi.get_gyro_y();
         imu_msg.angular_velocity.y = gy;
-        cout << "Gyro Y: " << gy << " ";
         double gz = spi.get_gyro_z();
         imu_msg.angular_velocity.z = gz;
-        cout << "Gyro Z: " << gz << endl;
-        vTaskDelay(100/portTICK_PERIOD_MS);
         publish_imuData();
     }
 }   
