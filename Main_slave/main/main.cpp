@@ -78,51 +78,41 @@ void node_init() {
 
 extern "C" void app_main(void)
 {   
-    // IC_SPI ic(&IC_spi_config);
-    // gpio_set_direction(GPIO_NUM_8, GPIO_MODE_OUTPUT);
-    // gpio_set_level(GPIO_NUM_7, 1);
-    // vTaskDelay(10);
-    // gpio_set_level(GPIO_NUM_8, 1);
-    // vTaskDelay(5000 /portTICK_PERIOD_MS);
-    // ic.begin();
-    // while(1) {
-    //     ic.test();
-    // }
-    #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
-	rmw_uros_set_custom_transport(
-		true,
-		(void *) &uart_port,
-		esp32_serial_open,
-		esp32_serial_close,
-		esp32_serial_write,
-		esp32_serial_read
-	);
-    #else`
-    #error micro-ROS transports misconfigured
-    #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
-    node_init();
-    DK42688_SPI spi(&IMU_spi_config);
-    spi.begin();
-    rosidl_runtime_c__String frame_id;
-    frame_id.data = "imu_link";
-    frame_id.size = strlen(frame_id.data);
-    frame_id.capacity = strlen(frame_id.data) + 1;
+    IC_SPI ic(&IC_spi_config);
+    ic.begin();
     while(1) {
-        imu_msg.header.frame_id = frame_id;
-        imu_msg.header.stamp.sec = esp_log_timestamp()/1000;
-        imu_msg.header.stamp.nanosec = esp_log_timestamp()%1000 * 1000000;
-        double ax = spi.get_accel_x();
-        imu_msg.linear_acceleration.x = ax; 
-        double ay = spi.get_accel_y();
-        imu_msg.linear_acceleration.y = ay;
-        double az = spi.get_accel_z();
-        imu_msg.linear_acceleration.z = az;
-        double gx = spi.get_gyro_x();
-        imu_msg.angular_velocity.x = gx;
-        double gy = spi.get_gyro_y();
-        imu_msg.angular_velocity.y = gy;
-        double gz = spi.get_gyro_z();
-        imu_msg.angular_velocity.z = gz;
-        publish_imuData();
+        ic.test();
     }
+    
+    // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
+	// rmw_uros_set_custom_transport(
+	// 	true,
+	// 	(void *) &uart_port,
+	// 	esp32_serial_open,
+	// 	esp32_serial_close,
+	// 	esp32_serial_write,
+	// 	esp32_serial_read
+	// );
+    // #else`
+    // #error micro-ROS transports misconfigured
+    // #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
+    // node_init();
+    // DK42688_SPI spi(&IMU_spi_config);
+    // spi.begin();
+    // rosidl_runtime_c__String frame_id;
+    // frame_id.data = "imu_link";
+    // frame_id.size = strlen(frame_id.data);
+    // frame_id.capacity = strlen(frame_id.data) + 1;
+    // imu_msg.header.frame_id = frame_id;
+    // while(1) {
+    //     imu_msg.header.stamp.sec = esp_log_timestamp()/1000;
+    //     imu_msg.header.stamp.nanosec = esp_log_timestamp()%1000 * 1000000;
+    //     imu_msg.linear_acceleration.x = spi.get_accel_x();
+    //     imu_msg.linear_acceleration.y = spi.get_accel_y();
+    //     imu_msg.linear_acceleration.z = spi.get_accel_z();
+    //     imu_msg.angular_velocity.x = spi.get_gyro_x();
+    //     imu_msg.angular_velocity.y = spi.get_gyro_y();
+    //     imu_msg.angular_velocity.z = spi.get_gyro_z();
+    //     publish_imuData();
+    // }
 }   

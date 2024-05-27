@@ -7,7 +7,7 @@ IC_SPI::IC_SPI(IC_SPI_Config *spi_config) {
     busESP.quadwp_io_num = -1;
     busESP.quadhd_io_num = -1; 
 
-    IC_dev.command_bits = 16; 
+    IC_dev.command_bits = 0; 
     IC_dev.address_bits = 0; 
     IC_dev.dummy_bits = 0;
     IC_dev.clock_speed_hz = 1000000; // 1 MHz
@@ -15,7 +15,7 @@ IC_SPI::IC_SPI(IC_SPI_Config *spi_config) {
     IC_dev.mode = 0;
     IC_dev.spics_io_num = spi_config->cs; 
     IC_dev.cs_ena_pretrans = 0;
-    IC_dev.cs_ena_posttrans = 1; 
+    IC_dev.cs_ena_posttrans = 0; 
     IC_dev.queue_size = 3;
 }
 
@@ -24,28 +24,37 @@ esp_err_t IC_SPI::begin() {
     if(ret != ESP_OK) return ret;
     ret = spi_bus_add_device(SPI3_HOST, &IC_dev, &handle);
     if(ret != ESP_OK) return ret;
+    // write_spi(AM_IP_4kreg::CFG2_B, 0, WRA);
+    // write_spi(0x80, 0, WRD);
     return ret;
 }
 
 esp_err_t IC_SPI::test() { // NEED MODIFICATION
-    esp_err_t ret = read_spi(AM_IP_4kreg::CFG1_A, 2, RD0);
-    vTaskDelay(10/portTICK_PERIOD_MS);
+    esp_err_t ret = read_spi(AM_IP_4kreg::STAT_A, RD0);
     printf("Received data[0]: 0x%02X\n", recvbuf[0]);
-    ret = read_spi(0x00, 2, RD1);
-    vTaskDelay(10/portTICK_PERIOD_MS);
-    printf("Received data[0]: 0x%02X\n", recvbuf[0]);
-    ret = read_spi(0x00, 2, NOP);
-    vTaskDelay(10/portTICK_PERIOD_MS);
-    printf("Received data[0]: 0x%02X\n", recvbuf[0]);
+    ret = read_spi(0x00, RD1);
+    printf("Received data[1]: 0x%02X\n", recvbuf[0]);
+    ret = read_spi(0x00, NOP);
+    printf("Received data[2]: 0x%02X\n", recvbuf[0]);
     return ret;
 }
 
-esp_err_t IC_SPI::read_spi(uint8_t reg, uint8_t length, uint8_t op_code) {
+esp_err_t IC_SPI::read_spi(uint8_t reg, uint8_t op_code) {
+    // EACH TIME THE CLOCK CYCLE SHOULD BE ONLY 16 CYCLES
+    t.length = 16;
+    rdsend[0] = (op_code << 12) | (HWA << 8) | reg;
+    rdsend[0] = SPI_SWAP_DATA_TX(rdsend[0], 16);
+    t.tx_buffer = rdsend;
+    t.rx_buffer = recvbuf;
+    esp_err_t ret = spi_device_transmit(handle, &t);
+    return ret;
+}
+
+esp_err_t IC_SPI::write_spi(uint8_t reg, uint8_t length, uint8_t op_code) {
     t.length = 8 * length;
     t.cmd = (op_code << 12) | (HWA << 8) | reg;
-    ESP_LOGI(TAG1, "CMD: 0x%04X", t.cmd); // Remove the extra argument
-    t.tx_buffer = 0;
-    t.rx_buffer = recvbuf;
+    t.tx_buffer = NULL;
+    t.rx_buffer = 0;
     esp_err_t ret = spi_device_transmit(handle, &t);
     return ret;
 }
