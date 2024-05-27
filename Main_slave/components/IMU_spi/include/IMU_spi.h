@@ -59,9 +59,9 @@ class DK42688_SPI {
         esp_err_t set_accel_fsr(AccelFSR fsr);
         esp_err_t set_accODR(ODR odr);
         esp_err_t set_gyroODR(ODR odr);
-        double get_accel_x();
-        double get_accel_y();
-        double get_accel_z();
+        double get_accel_x(uint8_t ac_flg = 0);
+        double get_accel_y(uint8_t ac_flg = 0);
+        double get_accel_z(uint8_t ac_flg = 0);
         double get_gyro_x(uint8_t gb_flg = 0);
         double get_gyro_y(uint8_t gb_flg = 0);
         double get_gyro_z(uint8_t gb_flg = 0);
@@ -91,6 +91,7 @@ class DK42688_SPI {
         float gyro_fsr = 2000.0;
         float accel_fsr = 16.0;
         double gyro_bias[3] = {};
+        double acc_bias[3] = {};
         
         esp_err_t read_spi(uint8_t reg);
         esp_err_t write_spi(uint8_t reg, uint8_t data, uint8_t len);

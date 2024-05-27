@@ -48,6 +48,8 @@ i2c_slave_config i2c_config = {
     .slaveAddr = 0x0A
 };
 
+DK42688_SPI spi(&IMU_spi_config);
+
 void publish_imuData() {
     rcl_ret_t rc;
     rc = rcl_publish(&publisher, &imu_msg, NULL);
@@ -55,64 +57,62 @@ void publish_imuData() {
         printf("Failed to publish IMU data");
     }
 }
-
+ 
 void node_init() {
-	rcl_allocator_t allocator = rcl_get_default_allocator();
-	rclc_support_t support;
-
-	RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
-
-	// create node
-	rcl_node_t node;
-	RCCHECK(rclc_node_init_default(&node, "ESP32", "", &support));
-
-	// create publisher
-	RCCHECK(rclc_publisher_init_default(
-		&publisher,
-		&node,
-		ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
-		"imu/data_raw"));
+    rcl_allocator_t allocator = rcl_get_default_allocator();
+    rclc_support_t support;
+ 
+    RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+ 
+    // create node
+    rcl_node_t node;
+    RCCHECK(rclc_node_init_default(&node, "ESP32", "", &support));
+ 
+    // create publisher
+    RCCHECK(rclc_publisher_init_default(
+        &publisher,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
+        "imu/data_raw"));
     rclc_executor_t executor;
-	RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+    RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
 }
-
+ 
 extern "C" void app_main(void)
 {   
-    IC_SPI ic(&IC_spi_config);
-    ic.begin();
-    while(1) {
-        ic.test();
-    }
-    
-    // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
-	// rmw_uros_set_custom_transport(
-	// 	true,
-	// 	(void *) &uart_port,
-	// 	esp32_serial_open,
-	// 	esp32_serial_close,
-	// 	esp32_serial_write,
-	// 	esp32_serial_read
-	// );
-    // #else`
-    // #error micro-ROS transports misconfigured
-    // #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
-    // node_init();
-    // DK42688_SPI spi(&IMU_spi_config);
-    // spi.begin();
-    // rosidl_runtime_c__String frame_id;
-    // frame_id.data = "imu_link";
-    // frame_id.size = strlen(frame_id.data);
-    // frame_id.capacity = strlen(frame_id.data) + 1;
-    // imu_msg.header.frame_id = frame_id;
+    // IC_SPI ic(&IC_spi_config);
+    // ic.begin();
     // while(1) {
-    //     imu_msg.header.stamp.sec = esp_log_timestamp()/1000;
-    //     imu_msg.header.stamp.nanosec = esp_log_timestamp()%1000 * 1000000;
-    //     imu_msg.linear_acceleration.x = spi.get_accel_x();
-    //     imu_msg.linear_acceleration.y = spi.get_accel_y();
-    //     imu_msg.linear_acceleration.z = spi.get_accel_z();
-    //     imu_msg.angular_velocity.x = spi.get_gyro_x();
-    //     imu_msg.angular_velocity.y = spi.get_gyro_y();
-    //     imu_msg.angular_velocity.z = spi.get_gyro_z();
-    //     publish_imuData();
+    //     ic.test();
     // }
+ 
+    #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
+    rmw_uros_set_custom_transport(
+        true,
+        (void *) &uart_port,
+        esp32_serial_open,
+        esp32_serial_close,
+        esp32_serial_write,
+        esp32_serial_read
+    );
+    #else`
+    #error micro-ROS transports misconfigured
+    #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
+    node_init();
+    spi.begin();
+    rosidl_runtime_c__String frame_id;
+    frame_id.data = "imu_link";
+    frame_id.size = strlen(frame_id.data);
+    frame_id.capacity = strlen(frame_id.data) + 1;
+    imu_msg.header.frame_id = frame_id;
+    while(1) {
+        imu_msg.header.stamp.sec = esp_log_timestamp()/1000;
+        imu_msg.linear_acceleration.x = spi.get_accel_x();
+        imu_msg.linear_acceleration.y = spi.get_accel_y();
+        imu_msg.linear_acceleration.z = spi.get_accel_z();
+        imu_msg.angular_velocity.x = spi.get_gyro_x();
+        imu_msg.angular_velocity.y = spi.get_gyro_y();
+        imu_msg.angular_velocity.z = spi.get_gyro_z();
+        publish_imuData();
+    }
 }   

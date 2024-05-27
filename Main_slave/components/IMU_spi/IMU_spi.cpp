@@ -60,10 +60,17 @@ esp_err_t DK42688_SPI::begin() {
         gyro_bias[0] += get_gyro_x(1);
         gyro_bias[1] += get_gyro_y(1);
         gyro_bias[2] += get_gyro_z(1);
+        acc_bias[0] += get_accel_x(1);
+        acc_bias[1] += get_accel_y(1);
+        acc_bias[2] += get_accel_z(1);
     }
     gyro_bias[0] /= 500.0;
     gyro_bias[1] /= 500.0;
     gyro_bias[2] /= 500.0;
+    acc_bias[0] /= 500.0;
+    acc_bias[1] /= 500.0;
+    acc_bias[2] /= 500.0;
+    acc_bias[2] -= 9.81;
     return ret;
 }
 
@@ -155,33 +162,42 @@ esp_err_t DK42688_SPI::set_gyroODR(ODR odr) {
     return ret;
 }
 
-double DK42688_SPI::get_accel_x() {
+double DK42688_SPI::get_accel_x(uint8_t ac_flg) {
     read_spi(ICM42688reg::ACCEL_DATA_X0);
     int16_t accel_data_x0 = recvbuf[0];
     read_spi(ICM42688reg::ACCEL_DATA_X1);
     int16_t accel_data_x1 = recvbuf[0];
     int16_t accel_x_raw = (accel_data_x1 << 8) | accel_data_x0;
     double acc_x = (accel_x_raw * accel_fsr/32768.0) * 9.81;
+    if(ac_flg == 0) {
+        acc_x -= acc_bias[0];
+    }
     return acc_x;
 }
 
-double DK42688_SPI::get_accel_y() {
+double DK42688_SPI::get_accel_y(uint8_t ac_flg) {
     read_spi(ICM42688reg::ACCEL_DATA_Y0);
     int16_t accel_data_y0 = recvbuf[0];
     read_spi(ICM42688reg::ACCEL_DATA_Y1);
     int16_t accel_data_y1 = recvbuf[0];
     int16_t accel_y_raw = (accel_data_y1 << 8) | accel_data_y0;
     double acc_y = (accel_y_raw * accel_fsr/32768.0) * 9.81;
+    if(ac_flg == 0) {
+        acc_y -= acc_bias[1];
+    }
     return acc_y;
 }
 
-double DK42688_SPI::get_accel_z() {
+double DK42688_SPI::get_accel_z(uint8_t ac_flg) {
     read_spi(ICM42688reg::ACCEL_DATA_Z0);
     int16_t accel_data_z0 = recvbuf[0];
     read_spi(ICM42688reg::ACCEL_DATA_Z1);
     int16_t accel_data_z1 = recvbuf[0];
     int16_t accel_z_raw = (accel_data_z1 << 8) | accel_data_z0;
     double acc_z = (accel_z_raw * accel_fsr/32768.0) * 9.81;
+    if(ac_flg == 0) {
+        acc_z -= acc_bias[2];
+    }
     return acc_z;
 }
 
