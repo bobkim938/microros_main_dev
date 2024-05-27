@@ -211,7 +211,7 @@ double DK42688_SPI::get_gyro_x(uint8_t gb_flg) {
     if(gb_flg == 0) {
         gyro_x -= gyro_bias[0];
     }
-    return gyro_x;
+    return (gyro_x * 3.14159/180.0);
 }
 
 double DK42688_SPI::get_gyro_y(uint8_t gb_flg) {
@@ -224,7 +224,7 @@ double DK42688_SPI::get_gyro_y(uint8_t gb_flg) {
     if(gb_flg == 0) {
         gyro_y -= gyro_bias[1];
     }
-    return gyro_y;
+    return (gyro_y * 3.14159/180.0);
 }
 
 double DK42688_SPI::get_gyro_z(uint8_t gb_flg) {
@@ -237,7 +237,7 @@ double DK42688_SPI::get_gyro_z(uint8_t gb_flg) {
     if(gb_flg == 0) {
         gyro_z -= gyro_bias[2];
     }
-    return gyro_z;
+    return (gyro_z * 3.14159/180.0);
 }
 
 int16_t DK42688_SPI::get_ax0() {

@@ -106,7 +106,8 @@ extern "C" void app_main(void)
     frame_id.capacity = strlen(frame_id.data) + 1;
     imu_msg.header.frame_id = frame_id;
     while(1) {
-        imu_msg.header.stamp.sec = esp_log_timestamp()/1000;
+        RCSOFTCHECK(rmw_uros_sync_session(1000));
+        imu_msg.header.stamp.sec = rmw_uros_epoch_millis();
         imu_msg.linear_acceleration.x = spi.get_accel_x();
         imu_msg.linear_acceleration.y = spi.get_accel_y();
         imu_msg.linear_acceleration.z = spi.get_accel_z();
