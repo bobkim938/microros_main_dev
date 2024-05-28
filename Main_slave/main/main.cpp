@@ -80,40 +80,48 @@ void node_init() {
  
 extern "C" void app_main(void)
 {   
-    // IC_SPI ic(&IC_spi_config);
-    // ic.begin();
-    // while(1) {
-    //     ic.test();
-    // }
- 
-    #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
-    rmw_uros_set_custom_transport(
-        true,
-        (void *) &uart_port,
-        esp32_serial_open,
-        esp32_serial_close,
-        esp32_serial_write,
-        esp32_serial_read
-    );
-    #else`
-    #error micro-ROS transports misconfigured
-    #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
-    node_init();
-    spi.begin();
-    rosidl_runtime_c__String frame_id;
-    frame_id.data = "imu_link";
-    frame_id.size = strlen(frame_id.data);
-    frame_id.capacity = strlen(frame_id.data) + 1;
-    imu_msg.header.frame_id = frame_id;
+    IC_SPI ic(&IC_spi_config);
+    ic.begin();
+    ic.readSTAT();
+    ic.write_CFG1();
+    ic.write_CFG2();
+    ic.write_CFG3();
     while(1) {
-        RCSOFTCHECK(rmw_uros_sync_session(1000));
-        imu_msg.header.stamp.sec = rmw_uros_epoch_millis();
-        imu_msg.linear_acceleration.x = spi.get_accel_x();
-        imu_msg.linear_acceleration.y = spi.get_accel_y();
-        imu_msg.linear_acceleration.z = spi.get_accel_z();
-        imu_msg.angular_velocity.x = spi.get_gyro_x();
-        imu_msg.angular_velocity.y = spi.get_gyro_y();
-        imu_msg.angular_velocity.z = spi.get_gyro_z();
-        publish_imuData();
+        ic.readMVAL();
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
+    // ic.write_CFG1();
+    // ic.write_CFG2();
+    // ic.write_CFG3();
+ 
+    // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
+    // rmw_uros_set_custom_transport(
+    //     true,
+    //     (void *) &uart_port,
+    //     esp32_serial_open,
+    //     esp32_serial_close,
+    //     esp32_serial_write,
+    //     esp32_serial_read
+    // );
+    // #else`
+    // #error micro-ROS transports misconfigured
+    // #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
+    // node_init();
+    // spi.begin();
+    // rosidl_runtime_c__String frame_id;
+    // frame_id.data = "imu_link";
+    // frame_id.size = strlen(frame_id.data);
+    // frame_id.capacity = strlen(frame_id.data) + 1;
+    // imu_msg.header.frame_id = frame_id;
+    // while(1) {
+    //     RCSOFTCHECK(rmw_uros_sync_session(1000));
+    //     imu_msg.header.stamp.sec = rmw_uros_epoch_millis();
+    //     imu_msg.linear_acceleration.x = spi.get_accel_x();
+    //     imu_msg.linear_acceleration.y = spi.get_accel_y();
+    //     imu_msg.linear_acceleration.z = spi.get_accel_z();
+    //     imu_msg.angular_velocity.x = spi.get_gyro_x();
+    //     imu_msg.angular_velocity.y = spi.get_gyro_y();
+    //     imu_msg.angular_velocity.z = spi.get_gyro_z();
+    //     publish_imuData();
+    // }
 }   

@@ -11,7 +11,7 @@
         "interface/ftdi/esp32_devkitj_v1.cfg",
         "target/esp32.cfg"
     ],
-    "idf.port": "/dev/cu.usbserial-110",
+    "idf.port": "/dev/cu.usbserial-1110",
     "idf.pythonBinPath": "/Users/kimminjoong/.espressif/python_env/idf5.2_py3.9_env/bin/python",
     "idf.toolsPath": "/Users/kimminjoong/.espressif",
     "idf.flashType": "UART",

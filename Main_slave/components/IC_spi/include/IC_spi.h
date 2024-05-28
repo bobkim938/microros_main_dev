@@ -27,16 +27,20 @@ class IC_SPI {
     public:
         IC_SPI(IC_SPI_Config *spi_config);
         esp_err_t begin();
-        esp_err_t test();
+        esp_err_t readSTAT();
+        esp_err_t readMVAL();
         esp_err_t read_spi(uint8_t reg, uint8_t op_code = 0);
-        esp_err_t write_spi(uint8_t reg, uint8_t length, uint8_t op_code);
+        esp_err_t write_spi(uint8_t reg, uint8_t op_code);
+        esp_err_t write_CFG1();
+        esp_err_t write_CFG2();
+        esp_err_t write_CFG3();
+
     private:
         spi_bus_config_t busESP = {}; // SPI bus configuration
         spi_device_interface_config_t IC_dev = {}; // SPI slave configuration
         spi_device_handle_t handle; 
         spi_transaction_t t = {};
-        uint8_t sendbuf[1] = {};
-        uint16_t rdsend[1] = {};
+        uint16_t sendbuf[1] = {};
         uint16_t recvbuf[1] = {};
 
 
