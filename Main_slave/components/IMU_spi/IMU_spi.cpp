@@ -16,7 +16,7 @@ DK42688_SPI::DK42688_SPI(DK42688_SPI_Config *spi_config) {
     devcfg.spics_io_num = spi_config->cs;
     devcfg.cs_ena_posttrans = 0; 
     devcfg.cs_ena_pretrans = 0;
-    devcfg.queue_size = 3;
+    devcfg.queue_size = 5;
 }   
 
 esp_err_t DK42688_SPI::read_spi(uint8_t reg) {

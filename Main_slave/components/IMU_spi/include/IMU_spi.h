@@ -66,20 +66,6 @@ class DK42688_SPI {
         double get_gyro_y(uint8_t gb_flg = 0);
         double get_gyro_z(uint8_t gb_flg = 0);
 
-
-        int16_t get_ax0();
-        int16_t get_ax1();
-        int16_t get_ay0();
-        int16_t get_ay1();
-        int16_t get_az0();
-        int16_t get_az1();
-        int16_t get_gx0();
-        int16_t get_gx1();
-        int16_t get_gy0();
-        int16_t get_gy1();
-        int16_t get_gz0();
-        int16_t get_gz1();
-
     private:
         esp_err_t ret;
         spi_device_handle_t handle;
@@ -96,6 +82,19 @@ class DK42688_SPI {
         esp_err_t read_spi(uint8_t reg);
         esp_err_t write_spi(uint8_t reg, uint8_t data, uint8_t len);
         esp_err_t who_am_i();
+
+        int16_t get_ax0();
+        int16_t get_ax1();
+        int16_t get_ay0();
+        int16_t get_ay1();
+        int16_t get_az0();
+        int16_t get_az1();
+        int16_t get_gx0();
+        int16_t get_gx1();
+        int16_t get_gy0();
+        int16_t get_gy1();
+        int16_t get_gz0();
+        int16_t get_gz1();
 
 
 };
