@@ -60,8 +60,7 @@ void publish_imuData() {
  
 void node_init() {
     rcl_allocator_t allocator = rcl_get_default_allocator();
-    rclc_support_t support;
- 
+    rclc_support_t support; 
     RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
  
     // create node

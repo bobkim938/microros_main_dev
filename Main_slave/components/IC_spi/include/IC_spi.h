@@ -4,6 +4,8 @@
 #include "driver/spi_master.h"
 #include "IC_register.h"
 #include "esp_log.h"
+#include <iostream>
+#include <inttypes.h>
 
 #define WRA 0b1000 // Write Address (0x8+address) 0b1000
 #define WRD 0b1010 // Write Data (0xA+data) 0b1010
@@ -42,6 +44,7 @@ class IC_SPI {
         spi_transaction_t t = {};
         uint16_t sendbuf[1] = {};
         uint16_t recvbuf[1] = {};
+        uint32_t MVAL = 0;
 
 
 };
