@@ -10,7 +10,7 @@ IC_SPI::IC_SPI(IC_SPI_Config *spi_config) {
     IC_dev.command_bits = 0; 
     IC_dev.address_bits = 0; 
     IC_dev.dummy_bits = 0;
-    IC_dev.clock_speed_hz = 1000000; // 1 MHz
+    IC_dev.clock_speed_hz = 100000; // 100kHz
     IC_dev.duty_cycle_pos = 128;
     IC_dev.mode = 0;
     IC_dev.spics_io_num = spi_config->cs; 
@@ -32,10 +32,10 @@ esp_err_t IC_SPI::readSTAT() {
     // printf("Received data[0]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, RD1);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[1]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[1]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, NOP);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[2]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[2]: 0x%04X\n", recvbuf[0]);
     return ret;
 }
 
@@ -54,7 +54,6 @@ esp_err_t IC_SPI::readMVAL() {
     uint8_t triggerValue = (MVAL >> 1) & 0x01;
     bool isError = (MVAL & 0x01) != 0;
     MVAL = MVAL >> 2;
-
     std::cout << "Measured Value: " << MVAL << std::endl;
     std::cout << "Trigger Value: " << static_cast<int>(triggerValue) << std::endl;
     std::cout << "Measured Value Error: " << (isError ? "Yes" : "No") << std::endl;

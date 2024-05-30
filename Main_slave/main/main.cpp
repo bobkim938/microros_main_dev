@@ -19,6 +19,8 @@
 #include <rmw_microros/rmw_microros.h>
 #include "esp32_serial_transport.h"
 
+#include <chrono>
+
 using namespace std;
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){printf("Failed status on line %d: %d. Aborting.\n",__LINE__,(int)temp_rc);vTaskDelete(NULL);}}
@@ -68,11 +70,17 @@ void node_init() {
     RCCHECK(rclc_node_init_default(&node, "ESP32", "", &support));
  
     // create publisher
-    RCCHECK(rclc_publisher_init_best_effort(
+    // RCCHECK(rclc_publisher_init_best_effort(
+    //     &publisher,
+    //     &node,
+    //     ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
+    //     "imu/data_raw"));
+    RCCHECK(rclc_publisher_init_default(
         &publisher,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
         "imu/data_raw"));
+
     rclc_executor_t executor;
     RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
 }
@@ -82,6 +90,24 @@ extern "C" void app_main(void)
     // IC_SPI ic(&IC_spi_config);
     // ic.begin();
     // ic.readSTAT();
+    // gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);
+    // while(1) {
+    //     gpio_set_level(GPIO_NUM_3, 0);
+    //     vTaskDelay(100/portTICK_PERIOD_MS);
+    //     gpio_set_level(GPIO_NUM_3, 1);
+    //     vTaskDelay(100/portTICK_PERIOD_MS);
+    // }
+    // gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);
+    // gpio_set_level(GPIO_NUM_3, 1);
+    // while(1) {
+    //     int a = gpio_get_level(GPIO_NUM_5);
+    //     if(a == 1) {
+    //         break;
+    //     }
+    // }
+    // while(1) {
+    //     ic.readSTAT();
+    // }
     // ic.write_CFG1();
     // ic.write_CFG2();
     // ic.write_CFG3();
@@ -109,9 +135,10 @@ extern "C" void app_main(void)
     frame_id.size = strlen(frame_id.data);
     frame_id.capacity = strlen(frame_id.data) + 1;
     imu_msg.header.frame_id = frame_id;
-    RCSOFTCHECK(rmw_uros_sync_session(1000));
     while(1) {
-        imu_msg.header.stamp.sec = rmw_uros_epoch_millis();
+        RCSOFTCHECK(rmw_uros_sync_session(1000));
+        imu_msg.header.stamp.sec = rmw_uros_epoch_millis()/1000.0;
+        imu_msg.header.stamp.nanosec = rmw_uros_epoch_nanos();
         imu_msg.linear_acceleration.x = spi.get_accel_x();
         imu_msg.linear_acceleration.y = spi.get_accel_y();
         imu_msg.linear_acceleration.z = spi.get_accel_z();
@@ -120,4 +147,24 @@ extern "C" void app_main(void)
         imu_msg.angular_velocity.z = spi.get_gyro_z();
         publish_imuData();
     }
+
+
+    //     spi.begin();
+    //     int num_loops = 100;
+    //     std::chrono::microseconds total_duration(0);
+    //     for (int i = 0; i < num_loops; ++i) {
+    //         auto start_time = std::chrono::high_resolution_clock::now();
+    //         imu_msg.header.stamp.sec = rmw_uros_epoch_millis();
+    //         imu_msg.linear_acceleration.x = spi.get_accel_x();
+    //         imu_msg.linear_acceleration.y = spi.get_accel_y();
+    //         imu_msg.linear_acceleration.z = spi.get_accel_z();
+    //         imu_msg.angular_velocity.x = spi.get_gyro_x();
+    //         imu_msg.angular_velocity.y = spi.get_gyro_y();
+    //         imu_msg.angular_velocity.z = spi.get_gyro_z();
+    //         auto end_time = std::chrono::high_resolution_clock::now();
+    //         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    //         total_duration += duration;
+    //     }
+    // double average_duration = static_cast<double>(total_duration.count()) / num_loops;
+    // std::cout << "Average time per loop iteration: " << average_duration << " microseconds" << std::endl;
 }   
