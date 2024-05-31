@@ -38,10 +38,10 @@ DK42688_SPI_Config IMU_spi_config = {
 };
 
 IC_SPI_Config IC_spi_config = {
-    .miso = GPIO_NUM_5,
+    .miso = GPIO_NUM_7,
     .mosi = GPIO_NUM_4,
     .sclk = GPIO_NUM_6,
-    .cs = GPIO_NUM_7
+    .cs = GPIO_NUM_5
 };
 
 i2c_slave_config i2c_config = {
@@ -89,6 +89,7 @@ extern "C" void app_main(void)
 {   
     IC_SPI ic(&IC_spi_config);
     ic.begin();
+    // ic.readSTAT();
     // ic.readSTAT();
     // gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);
     // while(1) {

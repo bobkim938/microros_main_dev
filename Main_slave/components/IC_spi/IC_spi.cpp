@@ -14,7 +14,7 @@ IC_SPI::IC_SPI(IC_SPI_Config *spi_config) {
     IC_dev.duty_cycle_pos = 128;
     IC_dev.mode = 0;
     IC_dev.spics_io_num = spi_config->cs; 
-    IC_dev.cs_ena_pretrans = 1;
+    IC_dev.cs_ena_pretrans = 0.5;
     IC_dev.cs_ena_posttrans = 1; 
     IC_dev.queue_size = 5;
 }
@@ -32,10 +32,10 @@ esp_err_t IC_SPI::readSTAT() {
     // printf("Received data[0]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, RD1);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    // printf("Received data[1]: 0x%04X\n", recvbuf[0]);
+    printf("Received data[1]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, NOP);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    // printf("Received data[2]: 0x%04X\n", recvbuf[0]);
+    printf("Received data[2]: 0x%04X\n", recvbuf[0]);
     return ret;
 }
 
