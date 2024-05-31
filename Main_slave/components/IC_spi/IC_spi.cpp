@@ -10,12 +10,12 @@ IC_SPI::IC_SPI(IC_SPI_Config *spi_config) {
     IC_dev.command_bits = 0; 
     IC_dev.address_bits = 0; 
     IC_dev.dummy_bits = 0;
-    IC_dev.clock_speed_hz = 100000; // 100kHz
+    IC_dev.clock_speed_hz = 1000000; // 1MHz
     IC_dev.duty_cycle_pos = 128;
     IC_dev.mode = 0;
     IC_dev.spics_io_num = spi_config->cs; 
-    IC_dev.cs_ena_pretrans = 0;
-    IC_dev.cs_ena_posttrans = 0; 
+    IC_dev.cs_ena_pretrans = 1;
+    IC_dev.cs_ena_posttrans = 1; 
     IC_dev.queue_size = 5;
 }
 
