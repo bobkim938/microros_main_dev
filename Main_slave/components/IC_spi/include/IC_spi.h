@@ -12,7 +12,7 @@
 #define RD0 0b1100 // Read bytes 0 + 1 (2LSB) (0xC+address) 0b1100
 #define RD1 0b1110 // Read Bytes 2 + 3 (2MSB) (0xE) 0b1110
 #define NOP 0b0000 // Output read Register 
-#define HWA 0b0000 // hardware address (default)
+// #define HWA 0b0000
 
 // AM-IP-4k SPI WORD FORMAT = 4 bit OP-CODE + 4 bit ADDRESS + 8 bit DATA
 
@@ -23,6 +23,8 @@ typedef struct {
     int mosi;
     int sclk;
     int cs;
+    uint8_t hwa;
+    bool init_bus; // to avoid re-initialization of bus
 } IC_SPI_Config;
 
 enum IC_rate : uint8_t { // interpolation rate
@@ -79,20 +81,23 @@ class IC_SPI {
         esp_err_t begin();
         esp_err_t readSTAT();
         esp_err_t readMVAL();
-        esp_err_t IC_SPI::rate_conf(IC_rate rate);
+        esp_err_t rate_conf(IC_rate rate);
 
     private:
+        uint8_t HWA = 0b0000;
         spi_bus_config_t busESP = {}; // SPI bus configuration
         spi_device_interface_config_t IC_dev = {}; // SPI slave configuration
         spi_device_handle_t handle; 
         spi_transaction_t t = {};
         uint16_t sendbuf[1] = {};
         uint16_t recvbuf[1] = {};
-        uint32_t MVAL = 0;
+        int32_t MVAL = 0;
         // CFG SET TO IC_RATE 4 (DEFAULT FOR OUR CASE)
         uint8_t CFG1[4] = {0x17, 0x09, 0xFF, 0x00}; // stored from LSB to MSB
         uint8_t CFG2[4] = {0x66, 0x02, 0x80, 0xC5};
         uint8_t CFG3[4] = {0x04, 0x00, 0x00, 0x00};
+
+        bool bus_init = 0;
 
         esp_err_t read_spi(uint8_t reg, uint8_t op_code = 0);
         esp_err_t write_spi(uint8_t reg, uint8_t op_code);

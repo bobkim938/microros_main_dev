@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "Main_slave",
-    "project_version":    "ada4c0d-dirty",
+    "project_version":    "1f7b453-dirty",
     "project_path":       "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave",
     "idf_path":           "/Users/kimminjoong/esp/v5.2.1/esp-idf",
     "build_dir":          "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build",

@@ -37,11 +37,22 @@ DK42688_SPI_Config IMU_spi_config = {
     .cs = GPIO_NUM_7
 };
 
-IC_SPI_Config IC_spi_config = {
+IC_SPI_Config IC_left = {
     .miso = GPIO_NUM_7,
     .mosi = GPIO_NUM_4,
     .sclk = GPIO_NUM_6,
-    .cs = GPIO_NUM_5
+    .cs = GPIO_NUM_5,
+    .hwa = 0b0000,
+    .init_bus = 0
+};
+
+IC_SPI_Config IC_right = {
+    .miso = GPIO_NUM_7,
+    .mosi = GPIO_NUM_4,
+    .sclk = GPIO_NUM_6,
+    .cs = GPIO_NUM_15,
+    .hwa = 0b0000,
+    .init_bus = 1 
 };
 
 i2c_slave_config i2c_config = {
@@ -87,19 +98,16 @@ void node_init() {
  
 extern "C" void app_main(void)
 {   
-    IC_SPI ic(&IC_spi_config);
-    ic.begin();
-    // ic.readSTAT();
-    // ic.write_CFG1();
-    // ic.write_CFG2();
-    // ic.write_CFG3();
-    // while(1) {
-    //     ic.readMVAL();
-    //     vTaskDelay(100 / portTICK_PERIOD_MS);
-    // }
+    IC_SPI ic_left(&IC_left);
+    ic_left.begin();
+    IC_SPI ic_right(&IC_right);
+    ic_right.begin();
 
+    ic_left.readSTAT();
+    ic_right.readSTAT();
+    
     while(1) {
-        ic.readSTAT();
+        ic_left.readMVAL();
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
  
