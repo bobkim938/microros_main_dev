@@ -90,25 +90,6 @@ extern "C" void app_main(void)
     IC_SPI ic(&IC_spi_config);
     ic.begin();
     // ic.readSTAT();
-    // ic.readSTAT();
-    // gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);
-    // while(1) {
-    //     gpio_set_level(GPIO_NUM_3, 0);
-    //     vTaskDelay(100/portTICK_PERIOD_MS);
-    //     gpio_set_level(GPIO_NUM_3, 1);
-    //     vTaskDelay(100/portTICK_PERIOD_MS);
-    // }
-    // gpio_set_direction(GPIO_NUM_3, GPIO_MODE_OUTPUT);
-    // gpio_set_level(GPIO_NUM_3, 1);
-    // while(1) {
-    //     int a = gpio_get_level(GPIO_NUM_5);
-    //     if(a == 1) {
-    //         break;
-    //     }
-    // }
-    while(1) {
-        ic.readSTAT();
-    }
     // ic.write_CFG1();
     // ic.write_CFG2();
     // ic.write_CFG3();
@@ -116,6 +97,11 @@ extern "C" void app_main(void)
     //     ic.readMVAL();
     //     vTaskDelay(100 / portTICK_PERIOD_MS);
     // }
+
+    while(1) {
+        ic.readSTAT();
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
  
     // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
     // rmw_uros_set_custom_transport(

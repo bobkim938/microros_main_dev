@@ -24,18 +24,27 @@ esp_err_t IC_SPI::begin() {
     if(ret != ESP_OK) return ret;
     ret = spi_bus_add_device(SPI3_HOST, &IC_dev, &handle);
     if(ret != ESP_OK) return ret;
+    // CHECK STAT ID
+    ret = read_spi(AM_IP_4kreg::STAT_A, RD0);
+    ret = read_spi(0x00, RD1);
+    recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
+    ret = read_spi(0x00, NOP);
+    recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
+    assert(recvbuf[0] == 0x4300); // can change to WHILE LOOP
+    ret = rate_conf(IC_rate::rate_4);
     return ret;
 }
+
 
 esp_err_t IC_SPI::readSTAT() { 
     esp_err_t ret = read_spi(AM_IP_4kreg::STAT_A, RD0);
     // printf("Received data[0]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, RD1);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[1]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[1]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, NOP);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[2]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[2]: 0x%04X\n", recvbuf[0]);
     return ret;
 }
 
@@ -44,116 +53,137 @@ esp_err_t IC_SPI::readMVAL() {
     // printf("Received data[0]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, RD1);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[1]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[1]: 0x%04X\n", recvbuf[0]);
     MVAL = (MVAL & 0) | recvbuf[0];
     ret = read_spi(0x00, NOP);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[2]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[2]: 0x%04X\n", recvbuf[0]);
     MVAL |= (recvbuf[0] << 16);
-    printf("MVAL: 0x%08X\n", (unsigned int)MVAL);
+    // printf("MVAL: 0x%08X\n", (unsigned int)MVAL);
     uint8_t triggerValue = (MVAL >> 1) & 0x01;
     bool isError = (MVAL & 0x01) != 0;
     MVAL = MVAL >> 2;
-    std::cout << "Measured Value: " << MVAL << std::endl;
-    std::cout << "Trigger Value: " << static_cast<int>(triggerValue) << std::endl;
-    std::cout << "Measured Value Error: " << (isError ? "Yes" : "No") << std::endl;
+    // std::cout << "Measured Value: " << MVAL << std::endl;
+    // std::cout << "Trigger Value: " << static_cast<int>(triggerValue) << std::endl;
+    // std::cout << "Measured Value Error: " << (isError ? "Yes" : "No") << std::endl;
 
+    return ret;
+}
+
+esp_err_t IC_SPI::rate_conf(IC_rate rate) {
+    esp_err_t ret;
+    if(rate == IC_rate::rate_16 || rate == IC_rate::rate_8 || rate == IC_rate::rate_4) {
+        CFG1[0] = (CFG1[0] & 0b11100000) | IC_rate::rate_32;
+        ret = write_CFG1();
+        if(ret != ESP_OK) return ret;
+        CFG2[0] = (CFG2[0] & 0b00011111) | rate;
+        ret = write_CFG2();
+        if(ret != ESP_OK) return ret;
+    }
+    else {
+        CFG1[0] = (CFG1[0] & 0b11100000) | rate;
+        ret = write_CFG1();
+        if(ret != ESP_OK) return ret;
+        CFG2[0] = (CFG2[0] & 0b00011111);
+        ret = write_CFG2();
+        if(ret != ESP_OK) return ret;
+    }
     return ret;
 }
 
 esp_err_t IC_SPI::write_CFG1() {
     esp_err_t ret = write_spi(AM_IP_4kreg::CFG1_A, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x17, WRD);
+    ret = write_spi(CFG1[0], WRD);
     if(ret != ESP_OK) return ret;
     ret = write_spi(AM_IP_4kreg::CFG1_B, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x09, WRD);
+    ret = write_spi(CFG1[1], WRD);
     if(ret != ESP_OK) return ret;
     ret = write_spi(AM_IP_4kreg::CFG1_C, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0xFF, WRD);
+    ret = write_spi(CFG1[2], WRD);
     if(ret != ESP_OK) return ret;
     ret = write_spi(AM_IP_4kreg::CFG1_D, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x00, WRD); 
+    ret = write_spi(CFG1[3], WRD); 
     if(ret != ESP_OK) return ret;
 
-    printf("Writing to CFG1\n");
+    // printf("Writing to CFG1\n");
 
     ret = read_spi(AM_IP_4kreg::CFG1_A, RD0);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
     // printf("Received data[0]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, RD1);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[1]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[1]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, NOP);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[2]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[2]: 0x%04X\n", recvbuf[0]);
     return ret;
 }
 
 esp_err_t IC_SPI::write_CFG2() {
     esp_err_t ret = write_spi(AM_IP_4kreg::CFG2_A, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x66, WRD);
+    ret = write_spi(CFG2[0], WRD);
     if(ret != ESP_OK) return ret;
     ret = write_spi(AM_IP_4kreg::CFG2_B, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x02, WRD);
+    ret = write_spi(CFG2[1], WRD);
     if(ret != ESP_OK) return ret;
     ret = write_spi(AM_IP_4kreg::CFG2_C, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x80, WRD);
+    ret = write_spi(CFG2[2], WRD);
     if(ret != ESP_OK) return ret;
     ret = write_spi(AM_IP_4kreg::CFG2_D, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0xC5, WRD); 
+    ret = write_spi(CFG2[3], WRD); 
     if(ret != ESP_OK) return ret;
 
-    printf("Writing to CFG2\n");
+    // printf("Writing to CFG2\n");
 
     ret = read_spi(AM_IP_4kreg::CFG2_A, RD0);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
     // printf("Received data[0]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, RD1);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[1]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[1]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, NOP);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[2]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[2]: 0x%04X\n", recvbuf[0]);
     return ret;
 }
 
 esp_err_t IC_SPI::write_CFG3() {
     esp_err_t ret = write_spi(AM_IP_4kreg::CFG3_A, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x04, WRD);
+    ret = write_spi(CFG3[0], WRD);
     if(ret != ESP_OK) return ret;
     ret = write_spi(AM_IP_4kreg::CFG3_B, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x00, WRD);
+    ret = write_spi(CFG3[1], WRD);
     if(ret != ESP_OK) return ret;
     ret = write_spi(AM_IP_4kreg::CFG3_C, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x00, WRD);
+    ret = write_spi(CFG3[2], WRD);
     if(ret != ESP_OK) return ret;
     ret = write_spi(AM_IP_4kreg::CFG3_D, WRA);
     if(ret != ESP_OK) return ret;
-    ret = write_spi(0x00, WRD); 
+    ret = write_spi(CFG3[3], WRD); 
     if(ret != ESP_OK) return ret;
     
-    printf("Writing to CFG3\n");
+    // printf("Writing to CFG3\n");
 
     ret = read_spi(AM_IP_4kreg::CFG3_A, RD0);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
     // printf("Received data[0]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, RD1);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[1]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[1]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, NOP);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
-    printf("Received data[2]: 0x%04X\n", recvbuf[0]);
+    // printf("Received data[2]: 0x%04X\n", recvbuf[0]);
     return ret;
 }
 
