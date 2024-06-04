@@ -14,6 +14,7 @@ typedef struct {
     int mosi;
     int sclk;
     int cs;
+    bool init_bus;
 } DK42688_SPI_Config;
 
 enum GyroFSR : uint8_t { // Full Scale Range gyro
@@ -78,6 +79,7 @@ class DK42688_SPI {
         float accel_fsr = 16.0;
         double gyro_bias[3] = {};
         double acc_bias[3] = {};
+        bool bus_init = 0;
         
         esp_err_t read_spi(uint8_t reg);
         esp_err_t write_spi(uint8_t reg, uint8_t data, uint8_t len);

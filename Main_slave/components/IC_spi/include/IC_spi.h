@@ -80,7 +80,7 @@ class IC_SPI {
         IC_SPI(IC_SPI_Config *spi_config);
         esp_err_t begin();
         esp_err_t readSTAT();
-        esp_err_t readMVAL();
+        int32_t readMVAL();
         esp_err_t rate_conf(IC_rate rate);
 
     private:
