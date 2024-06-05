@@ -93,7 +93,7 @@ void node_init() {
     RCCHECK(rclc_node_init_default(&node, "ESP32", "", &support));
  
     // create publisher for IMU data
-    RCCHECK(rclc_publisher_init_default(
+    RCCHECK(rclc_publisher_init_best_effort(
         &publisher,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
@@ -107,7 +107,7 @@ void node_init() {
         printf("Failed to allocate memory for encoder_msg.data.data\n");
         vTaskDelete(NULL);
     }
-    RCCHECK(rclc_publisher_init_default(
+    RCCHECK(rclc_publisher_init_best_effort(
         &pub_encoder,
         &node,
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32MultiArray),
@@ -119,65 +119,49 @@ void node_init() {
 
 extern "C" void app_main(void)
 {   
-    // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
-    // rmw_uros_set_custom_transport(
-    //     true,
-    //     (void *) &uart_port,
-    //     esp32_serial_open,
-    //     esp32_serial_close,
-    //     esp32_serial_write,
-    //     esp32_serial_read
-    // );
-    // #else
-    // #error micro-ROS transports misconfigured
-    // #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
+    #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
+    rmw_uros_set_custom_transport(
+        true,
+        (void *) &uart_port,
+        esp32_serial_open,
+        esp32_serial_close,
+        esp32_serial_write,
+        esp32_serial_read
+    );
+    #else
+    #error micro-ROS transports misconfigured
+    #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
 
-    // node_init();
+    node_init();
     IC_SPI ic_left(&IC_left);
     DK42688_SPI IMU(&IMU_spi_config);
     ic_left.begin();
     IC_SPI ic_right(&IC_right);
     ic_right.begin();
     IMU.begin();
-    // rosidl_runtime_c__String frame_id;
-    // frame_id.data = "imu_link";
-    // frame_id.size = strlen(frame_id.data);
-    // frame_id.capacity = strlen(frame_id.data) + 1;
-    // imu_msg.header.frame_id = frame_id;
-    // ic_left.readSTAT();
-    // ic_right.readSTAT();
+    rosidl_runtime_c__String frame_id;
+    frame_id.data = "imu_link";
+    frame_id.size = strlen(frame_id.data);
+    frame_id.capacity = strlen(frame_id.data) + 1;
+    imu_msg.header.frame_id = frame_id;
+    ic_left.readSTAT();
+    ic_right.readSTAT();
+    
     while (1) {
-        ic_left.readMVAL();
-        ic_right.readMVAL();
-        IMU.get_accel_x();
-        IMU.get_accel_y();
-        IMU.get_accel_z();
-        IMU.get_gyro_x();
-        IMU.get_gyro_y();
-        IMU.get_gyro_z();
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        encoder_msg.data.data[0] = ic_left.readMVAL();
+        encoder_msg.data.data[1] = ic_right.readMVAL();
+        encoder_msg.data.size = 2; // Ensure size is set correctly each time
 
-
-        // encoder_msg.data.data[0] = ic_left.readMVAL();
-        // encoder_msg.data.data[1] = ic_right.readMVAL();
-        // encoder_msg.data.size = 2; // Ensure size is set correctly each time
-
-        // RCSOFTCHECK(rmw_uros_sync_session(1000));
-        // imu_msg.header.stamp.sec = rmw_uros_epoch_millis()/1000.0;
-        // imu_msg.header.stamp.nanosec = rmw_uros_epoch_nanos();
-        // imu_msg.linear_acceleration.x = spi.get_accel_x();
-        // cout << "Accel x: " << imu_msg.linear_acceleration.x << endl;
-        // imu_msg.linear_acceleration.y = spi.get_accel_y();
-        // cout << "Accel y: " << imu_msg.linear_acceleration.y << endl;
-        // imu_msg.linear_acceleration.z = spi.get_accel_z();
-        // cout << "Accel z: " << imu_msg.linear_acceleration.z << endl;
-        // imu_msg.angular_velocity.x = spi.get_gyro_x();
-        // cout << "Gyro x: " << imu_msg.angular_velocity.x << endl;
-        // imu_msg.angular_velocity.y = spi.get_gyro_y();
-        // cout << "Gyro y: " << imu_msg.angular_velocity.y << endl;
-        // imu_msg.angular_velocity.z = spi.get_gyro_z();
-        // cout << "Gyro z: " << imu_msg.angular_velocity.z << endl;
-        // publish_imuData();
-        // publish_encoderData();
+        RCSOFTCHECK(rmw_uros_sync_session(1000));
+        imu_msg.header.stamp.sec = rmw_uros_epoch_millis()/1000.0;
+        imu_msg.header.stamp.nanosec = rmw_uros_epoch_nanos();
+        imu_msg.linear_acceleration.x = IMU.get_accel_x();
+        imu_msg.linear_acceleration.y = IMU.get_accel_y();
+        imu_msg.linear_acceleration.z = IMU.get_accel_z();
+        imu_msg.angular_velocity.x = IMU.get_gyro_x();
+        imu_msg.angular_velocity.y = IMU.get_gyro_y();
+        imu_msg.angular_velocity.z = IMU.get_gyro_z();
+        publish_imuData();
+        publish_encoderData();
     }
 }   
