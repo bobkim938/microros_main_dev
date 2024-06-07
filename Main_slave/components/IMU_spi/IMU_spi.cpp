@@ -219,7 +219,7 @@ double DK42688_SPI::get_gyro_x(uint8_t gb_flg) {
         gyro_x -= gyro_bias[0];
     }
     // printf("Gyro X: %f\n", gyro_x);
-    return (gyro_x * 3.14159/180.0);
+    return (gyro_x);
 }
 
 double DK42688_SPI::get_gyro_y(uint8_t gb_flg) {
@@ -233,7 +233,7 @@ double DK42688_SPI::get_gyro_y(uint8_t gb_flg) {
         gyro_y -= gyro_bias[1];
     }
     // printf("Gyro Y: %f\n", gyro_y);
-    return (gyro_y * 3.14159/180.0);
+    return (gyro_y);
 }
 
 double DK42688_SPI::get_gyro_z(uint8_t gb_flg) {
@@ -247,7 +247,7 @@ double DK42688_SPI::get_gyro_z(uint8_t gb_flg) {
         gyro_z -= gyro_bias[2];
     }
     // printf("Gyro Z: %f\n", gyro_z);
-    return (gyro_z * 3.14159/180.0);
+    return (gyro_z);
 }
 
 int16_t DK42688_SPI::get_ax0() {
