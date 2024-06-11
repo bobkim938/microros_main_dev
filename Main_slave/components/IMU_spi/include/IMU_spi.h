@@ -8,6 +8,7 @@
 #include <driver/gpio.h>
 #include "esp_system.h"
 #include <string>
+#include <math.h>
 
 typedef struct {
     int miso;
@@ -51,6 +52,17 @@ enum ODR : uint8_t { // Output Data Rate
     odr500 = 0x0F, // LP, LN mode
 };
 
+enum notch_bandwidth : uint8_t {
+    bw1449 = 0x00,
+    bw680 = 0x01,
+    bw329 = 0x02,
+    bw162 = 0x03,
+    bw80 = 0x04,
+    bw40 = 0x05,
+    bw20 = 0x06,
+    bw10 = 0x07,
+};
+
 class DK42688_SPI {
     public:
         DK42688_SPI(DK42688_SPI_Config *spi_config);
@@ -60,6 +72,10 @@ class DK42688_SPI {
         esp_err_t set_accel_fsr(AccelFSR fsr);
         esp_err_t set_accODR(ODR odr);
         esp_err_t set_gyroODR(ODR odr);
+        esp_err_t set_nf_aaf(bool nf_mode, bool aaf_mode); // mode = 0: disable, mode = 1: enable
+        esp_err_t set_gyroNF_freq(double freq); // 1kHz <= freq <= 3kHz
+        esp_err_t set_gyroNF_bw(notch_bandwidth bw);
+        esp_err_t set_aaf_bandwidth(uint8_t bandwidth); 
         double get_accel_x(uint8_t ac_flg = 0);
         double get_accel_y(uint8_t ac_flg = 0);
         double get_accel_z(uint8_t ac_flg = 0);
@@ -80,6 +96,9 @@ class DK42688_SPI {
         double gyro_bias[3] = {};
         double acc_bias[3] = {};
         bool bus_init = 0;
+        uint8_t AAF_bitShift = 0;
+        uint16_t AAF_deltSqr = 0;
+        
         
         esp_err_t read_spi(uint8_t reg);
         esp_err_t write_spi(uint8_t reg, uint8_t data, uint8_t len);

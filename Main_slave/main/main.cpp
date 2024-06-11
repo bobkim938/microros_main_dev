@@ -140,50 +140,57 @@ extern "C" void app_main(void)
     #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
 
     node_init();
-    IC_SPI ic_left(&IC_left);
+    // IC_SPI ic_left(&IC_left);
     DK42688_SPI IMU(&IMU_spi_config);
-    ic_left.begin();
-    IC_SPI ic_right(&IC_right);
-    ic_right.begin();
+    // ic_left.begin();
+    // IC_SPI ic_right(&IC_right);
+    // ic_right.begin();
     IMU.begin();
     rosidl_runtime_c__String frame_id;
     frame_id.data = "imu_link";
     frame_id.size = strlen(frame_id.data);
     frame_id.capacity = strlen(frame_id.data) + 1;
     imu_msg.header.frame_id = frame_id;
-    ic_left.readSTAT();
-    ic_right.readSTAT();
-    
+    // ic_left.readSTAT();
+    // ic_right.readSTAT();
+
     while (1) {
-        encoder_msg.data.data[0] = ic_left.readMVAL();
-        encoder_msg.data.data[1] = ic_right.readMVAL();
-        encoder_msg.data.size = 2; // Ensure size is set correctly each time
+        // encoder_msg.data.data[0] = ic_left.readMVAL();
+        // encoder_msg.data.data[1] = ic_right.readMVAL();
+        // encoder_msg.data.size = 2; // Ensure size is set correctly each time
 
         RCSOFTCHECK(rmw_uros_sync_session(1000));
         imu_msg.header.stamp.sec = rmw_uros_epoch_millis()/1000.0;
         imu_msg.header.stamp.nanosec = rmw_uros_epoch_nanos();
         // Moving average filter for IMU data
-        for(int i = 0; i < 9; i++) {
-            aX[i] = aX[i+1];
-            aY[i] = aY[i+1];
-            aZ[i] = aZ[i+1];
-            gX[i] = gX[i+1];
-            gY[i] = gY[i+1];
-            gZ[i] = gZ[i+1];
-        }
-        aX[9] = IMU.get_accel_x();
-        aY[9] = IMU.get_accel_y();
-        aZ[9] = IMU.get_accel_z();
-        gX[9] = IMU.get_gyro_x();
-        gY[9] = IMU.get_gyro_y();
-        gZ[9] = IMU.get_gyro_z();
-        imu_msg.linear_acceleration.x = (aX[0] + aX[1] + aX[2] + aX[3] + aX[4] + aX[5] + aX[6] + aX[7] + aX[8] + aX[9])/10;
-        imu_msg.linear_acceleration.y = (aY[0] + aY[1] + aY[2] + aY[3] + aY[4] + aY[5] + aY[6] + aY[7] + aY[8] + aY[9])/10;
-        imu_msg.linear_acceleration.z = (aZ[0] + aZ[1] + aZ[2] + aZ[3] + aZ[4] + aZ[5] + aZ[6] + aZ[7] + aZ[8] + aZ[9])/10;
-        imu_msg.angular_velocity.x = (gX[0] + gX[1] + gX[2] + gX[3] + gX[4] + gX[5] + gX[6] + gX[7] + gX[8] + gX[9])/10;
-        imu_msg.angular_velocity.y = (gY[0] + gY[1] + gY[2] + gY[3] + gY[4] + gY[5] + gY[6] + gY[7] + gY[8] + gY[9])/10;
-        imu_msg.angular_velocity.z = (gZ[0] + gZ[1] + gZ[2] + gZ[3] + gZ[4] + gZ[5] + gZ[6] + gZ[7] + gZ[8] + gZ[9])/10;
+        // for(int i = 0; i < 9; i++) {
+        //     aX[i] = aX[i+1];
+        //     aY[i] = aY[i+1];
+        //     aZ[i] = aZ[i+1];
+        //     gX[i] = gX[i+1];
+        //     gY[i] = gY[i+1];
+        //     gZ[i] = gZ[i+1];
+        // }
+        // aX[9] = IMU.get_accel_x();
+        // aY[9] = IMU.get_accel_y();
+        // aZ[9] = IMU.get_accel_z();
+        // gX[9] = IMU.get_gyro_x();
+        // gY[9] = IMU.get_gyro_y();
+        // gZ[9] = IMU.get_gyro_z();
+        // imu_msg.linear_acceleration.x = (aX[0] + aX[1] + aX[2] + aX[3] + aX[4] + aX[5] + aX[6] + aX[7] + aX[8] + aX[9])/10;
+        // imu_msg.linear_acceleration.y = (aY[0] + aY[1] + aY[2] + aY[3] + aY[4] + aY[5] + aY[6] + aY[7] + aY[8] + aY[9])/10;
+        // imu_msg.linear_acceleration.z = (aZ[0] + aZ[1] + aZ[2] + aZ[3] + aZ[4] + aZ[5] + aZ[6] + aZ[7] + aZ[8] + aZ[9])/10;
+        // imu_msg.angular_velocity.x = (gX[0] + gX[1] + gX[2] + gX[3] + gX[4] + gX[5] + gX[6] + gX[7] + gX[8] + gX[9])/10;
+        // imu_msg.angular_velocity.y = (gY[0] + gY[1] + gY[2] + gY[3] + gY[4] + gY[5] + gY[6] + gY[7] + gY[8] + gY[9])/10;
+        // imu_msg.angular_velocity.z = (gZ[0] + gZ[1] + gZ[2] + gZ[3] + gZ[4] + gZ[5] + gZ[6] + gZ[7] + gZ[8] + gZ[9])/10;
+        // publish_imuData();
+        // publish_encoderData();
+        imu_msg.linear_acceleration.x = IMU.get_accel_x();
+        imu_msg.linear_acceleration.y = IMU.get_accel_y();
+        imu_msg.linear_acceleration.z = IMU.get_accel_z();
+        imu_msg.angular_velocity.x = IMU.get_gyro_x();
+        imu_msg.angular_velocity.y = IMU.get_gyro_y();
+        imu_msg.angular_velocity.z = IMU.get_gyro_z();
         publish_imuData();
-        publish_encoderData();
     }
 }   

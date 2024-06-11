@@ -54,9 +54,11 @@ esp_err_t DK42688_SPI::begin() {
     vTaskDelay(5);
     ret = read_spi(ICM42688reg::PWR_MGMT0);
     // printf("Received data: 0x%02X\n", recvbuf[0]);
+    set_accel_fsr(AccelFSR::g4);
+    vTaskDelay(1);
     set_accODR(ODR::odr1k);
     vTaskDelay(1);
-    set_gyro_fsr(GyroFSR::dps2000);
+    set_gyro_fsr(GyroFSR::dps500);
     vTaskDelay(1);
     set_gyroODR(ODR::odr1k);
     vTaskDelay(1);
@@ -75,11 +77,16 @@ esp_err_t DK42688_SPI::begin() {
     acc_bias[1] /= 500.0;
     acc_bias[2] /= 500.0;
     acc_bias[2] -= 9.81;
+
+    set_nf_aaf(1, 1);
+    set_gyroNF_freq(1000.0);
+    set_gyroNF_bw(notch_bandwidth::bw329);
+    set_aaf_bandwidth(51);
     return ret;
 }
 
 esp_err_t DK42688_SPI::reset() {
-    ret = write_spi(ICM42688reg::DEVICE_CONFIG, 0x01, 2);
+    ret = write_spi(ICM42688reg::DEVICE_CONFIG, 0x01, 1);
     return ret;
 }
   
@@ -93,7 +100,7 @@ esp_err_t DK42688_SPI::who_am_i() {
 esp_err_t DK42688_SPI::set_gyro_fsr(GyroFSR fsr) {
     read_spi(ICM42688reg::GYRO_CONFIG0);
     uint8_t reg = (fsr << 5) | (recvbuf[0] & 0x1f);
-    ret = write_spi(ICM42688reg::GYRO_CONFIG0, reg, 2);
+    ret = write_spi(ICM42688reg::GYRO_CONFIG0, reg, 1);
     switch(fsr) {
         case GyroFSR::dps2000:
             gyro_fsr = 2000.0;
@@ -128,7 +135,7 @@ esp_err_t DK42688_SPI::set_gyro_fsr(GyroFSR fsr) {
 esp_err_t DK42688_SPI::set_accel_fsr(AccelFSR fsr) {
     read_spi(ICM42688reg::ACCEL_CONFIG0);
     uint8_t reg = (fsr << 5) | (recvbuf[0] & 0x1f);
-    ret = write_spi(ICM42688reg::ACCEL_CONFIG0, reg, 2);
+    ret = write_spi(ICM42688reg::ACCEL_CONFIG0, reg, 1);
     switch(fsr) {
         case AccelFSR::g16:
             accel_fsr = 16.0;
@@ -151,7 +158,7 @@ esp_err_t DK42688_SPI::set_accel_fsr(AccelFSR fsr) {
 esp_err_t DK42688_SPI::set_accODR(ODR odr) {
     read_spi(ICM42688reg::ACCEL_CONFIG0);
     uint8_t reg = (recvbuf[0] & 0xF0) | odr;
-    ret = write_spi(ICM42688reg::ACCEL_CONFIG0, reg, 2);
+    ret = write_spi(ICM42688reg::ACCEL_CONFIG0, reg, 1);
     read_spi(ICM42688reg::ACCEL_CONFIG0);
     // printf("Received data: 0x%02X\n", recvbuf[0]);
     return ret;
@@ -160,9 +167,111 @@ esp_err_t DK42688_SPI::set_accODR(ODR odr) {
 esp_err_t DK42688_SPI::set_gyroODR(ODR odr) {
     read_spi(ICM42688reg::GYRO_CONFIG0);
     uint8_t reg = (recvbuf[0] & 0xF0) | odr;
-    ret = write_spi(ICM42688reg::GYRO_CONFIG0, reg, 2);
+    ret = write_spi(ICM42688reg::GYRO_CONFIG0, reg, 1);
     read_spi(ICM42688reg::GYRO_CONFIG0);
     // printf("Received data: 0x%02X\n", recvbuf[0]);
+    return ret;
+}
+
+esp_err_t DK42688_SPI::set_nf_aaf(bool nf_mode, bool aaf_mode) {
+    if(nf_mode && aaf_mode) {
+        ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC2, 0x00, 1);
+    }
+    else if(nf_mode && !aaf_mode) {
+        ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC2, 0x02, 1);
+    }
+    else if(!nf_mode && aaf_mode) {
+        ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC2, 0x01, 1);
+    }
+    else {
+        ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC2, 0x03, 1);
+
+    }
+    return ret;
+}
+
+esp_err_t DK42688_SPI::set_gyroNF_freq(double freq) {
+    int16_t NF_COSWZ = 0;
+    uint8_t NF_COSWZ_SEL = 0;
+    double coswz = cos(2 * M_PI * freq / 32.0);
+    if(abs(coswz) <= 0.875) {
+        NF_COSWZ = round(coswz * 256);
+        NF_COSWZ_SEL = 0;
+    }
+    else {
+        NF_COSWZ_SEL = 1;
+        if(coswz > 0.875) {
+            NF_COSWZ = round(8*(1-coswz)*256);
+        }
+        else if(coswz < -0.875) {
+            NF_COSWZ = round(-8*(1+coswz)*256);
+        }
+    }
+    uint8_t nf_coswz = NF_COSWZ >> 8;
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC6, NF_COSWZ, 1);
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC7, NF_COSWZ, 1);
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC8, NF_COSWZ, 1);
+    uint8_t CONFIG_STATIC9 = 0x00;
+    CONFIG_STATIC9 = (NF_COSWZ_SEL << 5) | (NF_COSWZ_SEL << 4) | (NF_COSWZ_SEL << 3) | (nf_coswz << 2) | (nf_coswz << 1) | nf_coswz;
+    printf("CONFIG_STATIC9: 0x%02X\n", CONFIG_STATIC9);
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC9, CONFIG_STATIC9, 1);
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC6, NF_COSWZ, 1);
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC7, NF_COSWZ, 1);
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC8, NF_COSWZ, 1);
+    
+    return ret;
+}
+
+esp_err_t DK42688_SPI::set_gyroNF_bw(notch_bandwidth bw) {
+    uint8_t set_bw = (bw<<4) | 0x01;
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC5, set_bw, 1);
+    return ret;
+}
+
+esp_err_t DK42688_SPI::set_aaf_bandwidth(uint8_t bandwidth) {
+    AAF_deltSqr = bandwidth * bandwidth;
+    uint8_t accel_bw = (bandwidth << 1) | 0x00;
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC3, bandwidth, 1); //set gyro bandwidth for aaf
+    if(ret != ESP_OK) return ret;
+    ret = write_spi(ICM42688reg::ACCEL_CONFIG_STATIC2, accel_bw, 1); //set accel bandwidth for aaf
+    if(ret != ESP_OK) return ret;
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC4, AAF_deltSqr, 1);
+    if(ret != ESP_OK) return ret;
+    ret = write_spi(ICM42688reg::ACCEL_CONFIG_STATIC3, AAF_deltSqr, 1);
+    if(ret != ESP_OK) return ret;
+    uint8_t AAF_DELTSQR = AAF_deltSqr >> 8;
+    if(bandwidth == 1){
+        AAF_bitShift = 15;
+    } else if(bandwidth == 2){
+        AAF_bitShift = 13;
+    } else if(bandwidth == 3){
+        AAF_bitShift = 12;
+    } else if(bandwidth == 4){
+        AAF_bitShift = 11;
+    } else if(bandwidth == 5 || bandwidth == 6){
+        AAF_bitShift = 10;
+    } else if(bandwidth > 6 && bandwidth < 10){
+        AAF_bitShift = 9;
+    } else if(bandwidth > 9 && bandwidth < 14){
+        AAF_bitShift = 8;
+    } else if(bandwidth > 13 && bandwidth < 19){
+        AAF_bitShift = 7;
+    } else if(bandwidth > 18 && bandwidth < 27){
+        AAF_bitShift = 6;
+    } else if(bandwidth > 26 && bandwidth < 37){
+        AAF_bitShift = 5;
+    } else if(bandwidth > 36 && bandwidth < 53){
+        AAF_bitShift = 4;
+    } else if(bandwidth > 53 && bandwidth <= 63){
+        AAF_bitShift = 3;
+    }
+    uint8_t AAF = 0x00;
+    AAF = (AAF_bitShift << 4) | AAF_DELTSQR;
+    ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC5, AAF, 1);
+    if(ret != ESP_OK) return ret;
+    ret = write_spi(ICM42688reg::ACCEL_CONFIG_STATIC4, AAF, 1);
+    if(ret != ESP_OK) return ret;
+
     return ret;
 }
 
