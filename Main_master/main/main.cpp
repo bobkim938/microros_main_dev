@@ -6,10 +6,18 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "driver/uart.h"
+#include "DI_DO_SPI.h"
 
 i2c_master_config i2c_conf = {
 	.sda = GPIO_NUM_18,
 	.scl = GPIO_NUM_19
+};
+
+DI_DO_SPI_config DD_spi_config = {
+    .miso = GPIO_NUM_13,
+    .mosi = GPIO_NUM_11,
+    .sclk = GPIO_NUM_12,
+    .cs = GPIO_NUM_10,
 };
 
 extern "C" void app_main(void) {

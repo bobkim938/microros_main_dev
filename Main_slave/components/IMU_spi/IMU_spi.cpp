@@ -42,10 +42,10 @@ esp_err_t DK42688_SPI::write_spi(uint8_t reg, uint8_t data, uint8_t len) {
 
 esp_err_t DK42688_SPI::begin() {
     if(!bus_init) {
-        ret = spi_bus_initialize(SPI2_HOST, &buscfg, SPI_DMA_CH_AUTO);
+        ret = spi_bus_initialize(SPI3_HOST, &buscfg, SPI_DMA_CH_AUTO);
         if(ret != ESP_OK) return ret;
     }
-    ret = spi_bus_add_device(SPI2_HOST, &devcfg, &handle);
+    ret = spi_bus_add_device(SPI3_HOST, &devcfg, &handle);
     if(ret != ESP_OK) return ret;
     ret = who_am_i();
     if(ret != ESP_OK) return ret;

@@ -41,10 +41,10 @@ double gZ[10] = {};
 static size_t uart_port = UART_NUM_0; // UART port for Micro_ROS
 
 DK42688_SPI_Config IMU_spi_config = {
-    .miso = GPIO_NUM_13,
-    .mosi = GPIO_NUM_11,
-    .sclk = GPIO_NUM_12,
-    .cs = GPIO_NUM_10,
+    .miso = GPIO_NUM_7,
+    .mosi = GPIO_NUM_4,
+    .sclk = GPIO_NUM_6,
+    .cs = GPIO_NUM_5,
     .init_bus = 0 
 };
 
@@ -54,7 +54,7 @@ IC_SPI_Config IC_left = {
     .sclk = GPIO_NUM_6,
     .cs = GPIO_NUM_5,
     .hwa = 0b0000,
-    .init_bus = 0
+    .init_bus = 1
 };
 
 IC_SPI_Config IC_right = {
