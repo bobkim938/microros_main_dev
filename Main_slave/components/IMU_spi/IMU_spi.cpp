@@ -323,7 +323,7 @@ double DK42688_SPI::get_gyro_x(uint8_t gb_flg) {
     read_spi(ICM42688reg::GYRO_DATA_X1);
     int16_t gyro_data_x1 = recvbuf[0];  
     int16_t gyro_x_raw = (gyro_data_x1 << 8) | gyro_data_x0;  
-    double gyro_x = gyro_x_raw * (gyro_fsr / 32768.0);  
+    double gyro_x = gyro_x_raw * (gyro_fsr / 32768.0) * (M_PI / 180.0);  
     if(gb_flg == 0) {
         gyro_x -= gyro_bias[0];
     }
@@ -337,7 +337,7 @@ double DK42688_SPI::get_gyro_y(uint8_t gb_flg) {
     read_spi(ICM42688reg::GYRO_DATA_Y1);
     int16_t gyro_data_y1 = recvbuf[0];  
     int16_t gyro_y_raw = (gyro_data_y1 << 8) | gyro_data_y0;  
-    double gyro_y = gyro_y_raw * (gyro_fsr / 32768.0);  
+    double gyro_y = gyro_y_raw * (gyro_fsr / 32768.0) * (M_PI / 180.0);  
     if(gb_flg == 0) {
         gyro_y -= gyro_bias[1];
     }
@@ -351,7 +351,7 @@ double DK42688_SPI::get_gyro_z(uint8_t gb_flg) {
     read_spi(ICM42688reg::GYRO_DATA_Z1);
     int16_t gyro_data_z1 = recvbuf[0]; 
     int16_t gyro_z_raw = (gyro_data_z1 << 8) | gyro_data_z0;  
-    double gyro_z = gyro_z_raw * (gyro_fsr / 32768.0);  
+    double gyro_z = gyro_z_raw * (gyro_fsr / 32768.0) * (M_PI / 180.0);  
     if(gb_flg == 0) {
         gyro_z -= gyro_bias[2];
     }
