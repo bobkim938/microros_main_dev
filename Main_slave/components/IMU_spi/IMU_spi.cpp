@@ -213,7 +213,7 @@ esp_err_t DK42688_SPI::set_gyroNF_freq(double freq) {
     ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC8, NF_COSWZ, 1);
     uint8_t CONFIG_STATIC9 = 0x00;
     CONFIG_STATIC9 = (NF_COSWZ_SEL << 5) | (NF_COSWZ_SEL << 4) | (NF_COSWZ_SEL << 3) | (nf_coswz << 2) | (nf_coswz << 1) | nf_coswz;
-    printf("CONFIG_STATIC9: 0x%02X\n", CONFIG_STATIC9);
+    // printf("CONFIG_STATIC9: 0x%02X\n", CONFIG_STATIC9);
     ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC9, CONFIG_STATIC9, 1);
     ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC6, NF_COSWZ, 1);
     ret = write_spi(ICM42688reg::GYRO_CONFIG_STATIC7, NF_COSWZ, 1);

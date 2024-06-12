@@ -41,27 +41,27 @@ double gZ[10] = {};
 static size_t uart_port = UART_NUM_0; // UART port for Micro_ROS
 
 DK42688_SPI_Config IMU_spi_config = {
-    .miso = GPIO_NUM_7,
-    .mosi = GPIO_NUM_4,
-    .sclk = GPIO_NUM_6,
-    .cs = GPIO_NUM_5,
+    .miso = GPIO_NUM_13,
+    .mosi = GPIO_NUM_11,
+    .sclk = GPIO_NUM_12,
+    .cs = GPIO_NUM_10,
     .init_bus = 0 
 };
 
 IC_SPI_Config IC_left = {
-    .miso = GPIO_NUM_7,
-    .mosi = GPIO_NUM_4,
-    .sclk = GPIO_NUM_6,
-    .cs = GPIO_NUM_5,
+    .miso = GPIO_NUM_13,
+    .mosi = GPIO_NUM_11,
+    .sclk = GPIO_NUM_12,
+    .cs = GPIO_NUM_9,
     .hwa = 0b0000,
     .init_bus = 1
 };
 
 IC_SPI_Config IC_right = {
-    .miso = GPIO_NUM_7,
-    .mosi = GPIO_NUM_4,
-    .sclk = GPIO_NUM_6,
-    .cs = GPIO_NUM_15,
+    .miso = GPIO_NUM_13,
+    .mosi = GPIO_NUM_11,
+    .sclk = GPIO_NUM_12,
+    .cs = GPIO_NUM_35,
     .hwa = 0b0000,
     .init_bus = 1 
 };
@@ -72,7 +72,6 @@ i2c_slave_config i2c_config = {
     .slaveAddr = 0x0A
 };
 
-DK42688_SPI spi(&IMU_spi_config);
 
 void publish_imuData() {
     rcl_ret_t rc;
@@ -126,42 +125,42 @@ void node_init() {
 
 extern "C" void app_main(void)
 {   
-    #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
-    rmw_uros_set_custom_transport(
-        true,
-        (void *) &uart_port,
-        esp32_serial_open,
-        esp32_serial_close,
-        esp32_serial_write,
-        esp32_serial_read
-    );
-    #else
-    #error micro-ROS transports misconfigured
-    #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
+    // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
+    // rmw_uros_set_custom_transport(
+    //     true,
+    //     (void *) &uart_port,
+    //     esp32_serial_open,
+    //     esp32_serial_close,
+    //     esp32_serial_write,
+    //     esp32_serial_read
+    // );
+    // #else
+    // #error micro-ROS transports misconfigured
+    // #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
 
-    node_init();
-    // IC_SPI ic_left(&IC_left);
+    // node_init();
     DK42688_SPI IMU(&IMU_spi_config);
-    // ic_left.begin();
-    // IC_SPI ic_right(&IC_right);
-    // ic_right.begin();
+    IC_SPI ic_left(&IC_left);
+    IC_SPI ic_right(&IC_right);
     IMU.begin();
-    rosidl_runtime_c__String frame_id;
-    frame_id.data = "imu_link";
-    frame_id.size = strlen(frame_id.data);
-    frame_id.capacity = strlen(frame_id.data) + 1;
-    imu_msg.header.frame_id = frame_id;
-    // ic_left.readSTAT();
-    // ic_right.readSTAT();
+    ic_left.begin();
+    ic_right.begin();
+    // rosidl_runtime_c__String frame_id;
+    // frame_id.data = "imu_link";
+    // frame_id.size = strlen(frame_id.data);
+    // frame_id.capacity = strlen(frame_id.data) + 1;
+    // imu_msg.header.frame_id = frame_id;
+    ic_left.readSTAT();
+    ic_right.readSTAT();
 
     while (1) {
         // encoder_msg.data.data[0] = ic_left.readMVAL();
         // encoder_msg.data.data[1] = ic_right.readMVAL();
         // encoder_msg.data.size = 2; // Ensure size is set correctly each time
 
-        RCSOFTCHECK(rmw_uros_sync_session(1000));
-        imu_msg.header.stamp.sec = rmw_uros_epoch_millis()/1000.0;
-        imu_msg.header.stamp.nanosec = rmw_uros_epoch_nanos();
+        // RCSOFTCHECK(rmw_uros_sync_session(1000));
+        // imu_msg.header.stamp.sec = rmw_uros_epoch_millis()/1000.0;
+        // imu_msg.header.stamp.nanosec = rmw_uros_epoch_nanos();
         // Moving average filter for IMU data
         // for(int i = 0; i < 9; i++) {
         //     aX[i] = aX[i+1];
@@ -185,12 +184,12 @@ extern "C" void app_main(void)
         // imu_msg.angular_velocity.z = (gZ[0] + gZ[1] + gZ[2] + gZ[3] + gZ[4] + gZ[5] + gZ[6] + gZ[7] + gZ[8] + gZ[9])/10;
         // publish_imuData();
         // publish_encoderData();
-        imu_msg.linear_acceleration.x = IMU.get_accel_x();
-        imu_msg.linear_acceleration.y = IMU.get_accel_y();
-        imu_msg.linear_acceleration.z = IMU.get_accel_z();
-        imu_msg.angular_velocity.x = IMU.get_gyro_x();
-        imu_msg.angular_velocity.y = IMU.get_gyro_y();
-        imu_msg.angular_velocity.z = IMU.get_gyro_z();
-        publish_imuData();
+        // imu_msg.linear_acceleration.x = IMU.get_accel_x();
+        // imu_msg.linear_acceleration.y = IMU.get_accel_y();
+        // imu_msg.linear_acceleration.z = IMU.get_accel_z();
+        // imu_msg.angular_velocity.x = IMU.get_gyro_x();
+        // imu_msg.angular_velocity.y = IMU.get_gyro_y();
+        // imu_msg.angular_velocity.z = IMU.get_gyro_z();
+        // publish_imuData();
     }
 }   
