@@ -63,6 +63,14 @@ enum notch_bandwidth : uint8_t {
     bw10 = 0x07,
 };
 
+enum UI_order : uint8_t {
+    order1 = 0b00,
+    order2 = 0b01,
+    order3 = 0b10,
+
+};
+
+
 class DK42688_SPI {
     public:
         DK42688_SPI(DK42688_SPI_Config *spi_config);
@@ -72,10 +80,6 @@ class DK42688_SPI {
         esp_err_t set_accel_fsr(AccelFSR fsr);
         esp_err_t set_accODR(ODR odr);
         esp_err_t set_gyroODR(ODR odr);
-        esp_err_t set_nf_aaf(bool nf_mode, bool aaf_mode); // mode = 0: disable, mode = 1: enable
-        esp_err_t set_gyroNF_freq(double freq); // 1kHz <= freq <= 3kHz
-        esp_err_t set_gyroNF_bw(notch_bandwidth bw);
-        esp_err_t set_aaf_bandwidth(uint8_t bandwidth); 
         double get_accel_x(uint8_t ac_flg = 0);
         double get_accel_y(uint8_t ac_flg = 0);
         double get_accel_z(uint8_t ac_flg = 0);
@@ -103,6 +107,11 @@ class DK42688_SPI {
         esp_err_t read_spi(uint8_t reg);
         esp_err_t write_spi(uint8_t reg, uint8_t data, uint8_t len);
         esp_err_t who_am_i();
+        esp_err_t set_nf_aaf(bool nf_mode, bool aaf_mode); // mode = 0: disable, mode = 1: enable
+        esp_err_t set_gyroNF_freq(double freq); // 1kHz <= freq <= 3kHz
+        esp_err_t set_gyroNF_bw(notch_bandwidth bw);
+        esp_err_t set_aaf_bandwidth(uint8_t bandwidth); 
+        esp_err_t set_ui_filter(UI_order filter_order, uint8_t filter_index);
 
         int16_t get_ax0();
         int16_t get_ax1();
