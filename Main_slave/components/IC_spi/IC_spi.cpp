@@ -171,7 +171,11 @@ esp_err_t IC_SPI::write_CFG2() {
     return ret;
 }
 
-esp_err_t IC_SPI::write_CFG3() {
+esp_err_t IC_SPI::write_CFG3(bool abSwitch) {
+    // CFG[1] SWITCH BIT
+    if(abSwitch) {
+        CFG3[1] &= (0b1 << 5);
+    }
     esp_err_t ret = write_spi(AM_IP_4kreg::CFG3_A, WRA);
     if(ret != ESP_OK) return ret;
     ret = write_spi(CFG3[0], WRD);

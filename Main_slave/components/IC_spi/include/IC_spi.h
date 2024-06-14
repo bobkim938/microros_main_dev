@@ -103,7 +103,7 @@ class IC_SPI {
         esp_err_t write_spi(uint8_t reg, uint8_t op_code);
         esp_err_t write_CFG1();
         esp_err_t write_CFG2();
-        esp_err_t write_CFG3();
+        esp_err_t write_CFG3(bool abSwitch = 0);
 };
 
 

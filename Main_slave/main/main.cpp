@@ -31,13 +31,6 @@ rcl_publisher_t pub_encoder;
 sensor_msgs__msg__Imu imu_msg = {};
 std_msgs__msg__Int32MultiArray encoder_msg;
 
-double aX[10] = {};
-double aY[10] = {};
-double aZ[10] = {};
-double gX[10] = {};
-double gY[10] = {};
-double gZ[10] = {};
-
 static size_t uart_port = UART_NUM_0; // UART port for Micro_ROS
 
 DK42688_SPI_Config IMU_spi_config = {

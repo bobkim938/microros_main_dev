@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "Main_master",
-    "project_version":    "73b0511-dirty",
+    "project_version":    "0551e89-dirty",
     "project_path":       "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master",
     "idf_path":           "/Users/kimminjoong/esp/v5.2.1/esp-idf",
     "build_dir":          "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build",
@@ -41,7 +41,7 @@
             "managed_priv_reqs": [],
             "file": "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/DI_DO_SPI/libDI_DO_SPI.a",
             "sources": [ "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/DI_DO_SPI/DI_DO_SPI.cpp" ],
-            "include_dirs": [ "include" ]
+            "include_dirs": [ "include", "." ]
         },
         "app_trace": {
             "alias": "idf::app_trace",
@@ -2188,7 +2188,7 @@
             "priv_reqs": [],
             "managed_reqs": [],
             "managed_priv_reqs": [],
-            "include_dirs": [ "include" ]
+            "include_dirs": [ "include", "." ]
         },
         "i2c_master": {
             "alias": "idf::i2c_master",

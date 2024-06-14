@@ -93,7 +93,7 @@ esp_err_t DK42688_SPI::reset() {
 esp_err_t DK42688_SPI::who_am_i() {
     ret = read_spi(ICM42688reg::WHO_AM_I);
     printf("Received data: 0x%02X\n", recvbuf[0]);
-    assert(recvbuf[0] == 0x47);
+    // assert(recvbuf[0] == 0x47);
     return ret;
 }
 

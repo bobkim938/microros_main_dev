@@ -8,17 +8,57 @@ DI_DO_SPI::DI_DO_SPI(DI_DO_SPI_config* spi_config) {
     buscfg.quadwp_io_num = -1;
     buscfg.quadhd_io_num = -1;
 
-    devcfg.command_bits = 0;
-    devcfg.address_bits = 0;
-    devcfg.dummy_bits = 0;
-    devcfg.clock_speed_hz = 1000000; // 1 MHz
-    devcfg.duty_cycle_pos = 128;
-    devcfg.mode = 3;
-    devcfg.spics_io_num = spi_config->cs;
-    devcfg.cs_ena_posttrans = 0; 
-    devcfg.cs_ena_pretrans = 0;
-    devcfg.queue_size = 5;
+    DiDo_cfg.command_bits = 0;
+    DiDo_cfg.address_bits = 0;
+    DiDo_cfg.dummy_bits = 0;
+    DiDo_cfg.clock_speed_hz = 1000000; // 1 MHz
+    DiDo_cfg.duty_cycle_pos = 128;
+    DiDo_cfg.mode = 2;
+    DiDo_cfg.spics_io_num = spi_config->cs;
+    DiDo_cfg.cs_ena_posttrans = 0; 
+    DiDo_cfg.cs_ena_pretrans = 0;
+    DiDo_cfg.queue_size = 5;
 }
+
+esp_err_t DI_DO_SPI::begin() {
+    ret = spi_bus_initialize(SPI3_HOST, &buscfg, SPI_DMA_CH_AUTO);
+    if(ret != ESP_OK) {
+        printf("bus initialization fail, error code: %d\n", ret);
+        return ret;
+    }
+    ret = spi_bus_add_device(SPI3_HOST, &DiDo_cfg, &handle);
+    if(ret != ESP_OK) {
+        printf("add device failed");
+        return ret;
+    }
+    printf("DI DO initialized");
+    return ret;
+}
+
+esp_err_t DI_DO_SPI::test_read() {
+    ret = read_spi(DI_DO_REG::CHAN_STATUS);
+    return ret;
+}
+
+esp_err_t DI_DO_SPI::read_spi(uint8_t reg) {
+    t.length = 8;
+    t.tx_buffer = sendbuf;
+    t.rx_buffer = recvbuf;
+    sendbuf[0] |= (0b1 << 6);
+    ret = spi_device_transmit(handle, &t);
+    if(ret != ESP_OK) return ret;
+    sendbuf[0] = reg;
+    ret = spi_device_transmit(handle, &t);
+    sendbuf[0] = 0x00;
+    ret = spi_device_transmit(handle, &t);
+    printf("Received data: 0x%02X\n", recvbuf[0]);
+    if(ret != ESP_OK) return ret;
+    return ret;
+}
+
+
+
+
 
 
 
