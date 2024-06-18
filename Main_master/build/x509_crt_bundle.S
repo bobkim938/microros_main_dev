@@ -1,4 +1,4 @@
-/* * Data converted from /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/mbedtls/x509_crt_bundle
+/* * Data converted from /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/mbedtls/x509_crt_bundle
  */
 .data
 .section .rodata.embedded

@@ -1,4 +1,4 @@
-# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master
+# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -38,9 +38,8 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
-  # Include the install script for each subdirectory.
-  include("/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/cmake_install.cmake")
-
+  # Include the install script for the subdirectory.
+  include("/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -51,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

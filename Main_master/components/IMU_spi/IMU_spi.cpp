@@ -517,8 +517,3 @@ int16_t DK42688_SPI::get_gz1() {
     int16_t gyro_data_z1 = recvbuf[0];
     return gyro_data_z1;
 }
-
-
-
-
-

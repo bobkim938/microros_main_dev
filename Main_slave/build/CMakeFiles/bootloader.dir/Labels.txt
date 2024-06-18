@@ -1,13 +1,13 @@
 # Target labels
  bootloader
 # Source files and their labels
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/CMakeFiles/bootloader
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/CMakeFiles/bootloader.rule
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/CMakeFiles/bootloader-complete.rule
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
-/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/CMakeFiles/bootloader
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/CMakeFiles/bootloader.rule
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/CMakeFiles/bootloader-complete.rule
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule

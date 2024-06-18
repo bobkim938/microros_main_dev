@@ -39,7 +39,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/bootloader/esp-idf/cmake_install.cmake")
+  include("/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/bootloader/esp-idf/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/bootloader/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/bootloader/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

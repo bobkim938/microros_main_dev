@@ -1,4 +1,4 @@
-# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/main
+# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/main
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

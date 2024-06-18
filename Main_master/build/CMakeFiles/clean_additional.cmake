@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.16)
 
 if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   file(REMOVE_RECURSE
-  "Main_master.bin"
-  "Main_master.map"
+  "Main_slave.bin"
+  "Main_slave.map"
   "bootloader/bootloader.bin"
   "bootloader/bootloader.elf"
   "bootloader/bootloader.map"
@@ -20,9 +20,9 @@ if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   "ldgen_libraries.in"
   "project_elf_src_esp32s3.c"
   "x509_crt_bundle.S"
-  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/micro_ros_espidf_component/esp32_toolchain.cmake"
-  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/micro_ros_espidf_component/include"
-  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/micro_ros_espidf_component/micro_ros_dev"
-  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/micro_ros_espidf_component/micro_ros_src"
+  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/micro_ros_espidf_component/esp32_toolchain.cmake"
+  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/micro_ros_espidf_component/include"
+  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/micro_ros_espidf_component/micro_ros_dev"
+  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/micro_ros_espidf_component/micro_ros_src"
   )
 endif()
