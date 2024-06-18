@@ -139,17 +139,17 @@ extern "C" void app_main(void)
     // ic_left.begin();
     // ic_right.begin();
     rosidl_runtime_c__String frame_id;
-    frame_id.data = "imu_link";
-    frame_id.size = strlen(frame_id.data);
-    frame_id.capacity = strlen(frame_id.data) + 1;
-    imu_msg.header.frame_id = frame_id;
+    // frame_id.data = "imu_link";
+    // frame_id.size = strlen(frame_id.data);
+    // frame_id.capacity = strlen(frame_id.data) + 1;
+    // imu_msg.header.frame_id = frame_id;
     // ic_left.readSTAT();
     // ic_right.readSTAT();
 
     // while (1) {
-    //     encoder_msg.data.data[0] = ic_left.readMVAL();
-    //     encoder_msg.data.data[1] = ic_right.readMVAL();
-    //     encoder_msg.data.size = 2; // Ensure size is set correctly each time
+    //     // encoder_msg.data.data[0] = ic_left.readMVAL();
+    //     // encoder_msg.data.data[1] = ic_right.readMVAL();
+    //     // encoder_msg.data.size = 2; // Ensure size is set correctly each time
 
     //     RCSOFTCHECK(rmw_uros_sync_session(1000));
     //     imu_msg.header.stamp.sec = rmw_uros_epoch_millis()/1000.0;

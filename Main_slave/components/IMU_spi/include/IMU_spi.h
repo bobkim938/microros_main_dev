@@ -67,7 +67,6 @@ enum UI_order : uint8_t {
     order1 = 0b00,
     order2 = 0b01,
     order3 = 0b10,
-
 };
 
 
@@ -103,14 +102,13 @@ class DK42688_SPI {
         uint8_t AAF_bitShift = 0;
         uint16_t AAF_deltSqr = 0;
         
-        
         esp_err_t read_spi(uint8_t reg);
         esp_err_t write_spi(uint8_t reg, uint8_t data, uint8_t len);
         esp_err_t who_am_i();
-        esp_err_t set_nf_aaf(bool nf_mode, bool aaf_mode); // mode = 0: disable, mode = 1: enable
+        esp_err_t setGyro_nf_aaf(bool nf_mode, bool aaf_mode); // ONLY FOR GYRO mode = 0: disable, mode = 1: enable
         esp_err_t set_gyroNF_freq(double freq); // 1kHz <= freq <= 3kHz
         esp_err_t set_gyroNF_bw(notch_bandwidth bw);
-        esp_err_t set_aaf_bandwidth(uint8_t bandwidth); 
+        esp_err_t set_aaf_bandwidth(uint8_t bandwidth, std::string which_sensor = "both"); 
         esp_err_t set_ui_filter(UI_order filter_order, uint8_t filter_index);
 
         int16_t get_ax0();
@@ -125,8 +123,6 @@ class DK42688_SPI {
         int16_t get_gy1();
         int16_t get_gz0();
         int16_t get_gz1();
-
-
 };
 
 
