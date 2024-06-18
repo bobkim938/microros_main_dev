@@ -1,6 +1,6 @@
 #include <iostream>
 #include "IMU_SPI.h"
-#include "i2c_slave.h"
+#include "i2c_master.h"
 #include "IC_spi.h"
 
 #include "freertos/FreeRTOS.h"
@@ -59,10 +59,9 @@ IC_SPI_Config IC_right = {
     .init_bus = 1 
 };
 
-i2c_slave_config i2c_config = {
-    .sda = GPIO_NUM_18, // 15
-    .scl = GPIO_NUM_19, // 16
-    .slaveAddr = 0x0A
+i2c_master_config i2c_config = {
+    .sda = GPIO_NUM_18, 
+    .scl = GPIO_NUM_19, 
 };
 
 

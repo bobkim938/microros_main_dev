@@ -1,4 +1,4 @@
-# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/DI_DO_SPI
+# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/DI_DO_SPI
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

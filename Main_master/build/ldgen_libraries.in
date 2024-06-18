@@ -66,5 +66,5 @@ $<TARGET_FILE:__idf_wifi_provisioning>
 $<TARGET_FILE:__idf_main>
 $<TARGET_FILE:__idf_IC_spi>
 $<TARGET_FILE:__idf_IMU_spi>
-$<TARGET_FILE:__idf_i2c_slave>
+$<TARGET_FILE:__idf_i2c_master>
 $<TARGET_FILE:__idf_micro_ros_espidf_component>

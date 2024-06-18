@@ -1,11 +1,13 @@
 #include "DI_DO_SPI.h"
 #include <chrono>
 #include <iostream>
+#include "i2c_slave.h"
 
-// i2c_master_config i2c_conf = {
-// 	.sda = GPIO_NUM_18,
-// 	.scl = GPIO_NUM_19
-// };
+i2c_slave_config i2c_conf = {
+	.sda = GPIO_NUM_18,
+	.scl = GPIO_NUM_19,
+	.slaveAddr = 0x0A
+};
 
 DI_DO_SPI_config DD_spi_config = {
     .miso = GPIO_NUM_13,

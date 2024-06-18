@@ -1,4 +1,4 @@
-# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/IMU_spi
+# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/IMU_spi
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

@@ -1,4 +1,4 @@
-# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/i2c_master
+# Install script for directory: /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/i2c_master
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

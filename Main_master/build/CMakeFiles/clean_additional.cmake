@@ -20,9 +20,9 @@ if("${CONFIG}" STREQUAL "" OR "${CONFIG}" STREQUAL "")
   "ldgen_libraries.in"
   "project_elf_src_esp32s3.c"
   "x509_crt_bundle.S"
-  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/micro_ros_espidf_component/esp32_toolchain.cmake"
-  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/micro_ros_espidf_component/include"
-  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/micro_ros_espidf_component/micro_ros_dev"
-  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/components/micro_ros_espidf_component/micro_ros_src"
+  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/micro_ros_espidf_component/esp32_toolchain.cmake"
+  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/micro_ros_espidf_component/include"
+  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/micro_ros_espidf_component/micro_ros_dev"
+  "/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/components/micro_ros_espidf_component/micro_ros_src"
   )
 endif()

@@ -1479,7 +1479,7 @@ rule C_STATIC_LIBRARY_LINKER____idf_DI_DO_SPI_
 #############################################
 # Rule for compiling CXX files.
 
-rule CXX_COMPILER____idf_i2c_master_
+rule CXX_COMPILER____idf_i2c_slave_
   depfile = $DEP_FILE
   deps = gcc
   command = /Users/kimminjoong/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20230928/xtensa-esp-elf/bin/xtensa-esp32s3-elf-g++ $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
@@ -1489,7 +1489,7 @@ rule CXX_COMPILER____idf_i2c_master_
 #############################################
 # Rule for linking C static library.
 
-rule C_STATIC_LIBRARY_LINKER____idf_i2c_master_
+rule C_STATIC_LIBRARY_LINKER____idf_i2c_slave_
   command = $PRE_LINK && /Users/kimminjoong/.espressif/tools/cmake/3.24.0/CMake.app/Contents/bin/cmake -E rm -f $TARGET_FILE && /Users/kimminjoong/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20230928/xtensa-esp-elf/bin/xtensa-esp32s3-elf-ar qc $TARGET_FILE $LINK_FLAGS $in && /Users/kimminjoong/.espressif/tools/xtensa-esp-elf/esp-13.2.0_20230928/xtensa-esp-elf/bin/xtensa-esp32s3-elf-ranlib $TARGET_FILE && /Users/kimminjoong/.espressif/tools/cmake/3.24.0/CMake.app/Contents/bin/cmake -E touch $TARGET_FILE && $POST_BUILD
   description = Linking C static library $TARGET_FILE
   restat = $RESTAT
@@ -1518,7 +1518,7 @@ rule C_STATIC_LIBRARY_LINKER____idf_micro_ros_espidf_component_
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = /Users/kimminjoong/.espressif/tools/cmake/3.24.0/CMake.app/Contents/bin/cmake --regenerate-during-build -S/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master -B/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build
+  command = /Users/kimminjoong/.espressif/tools/cmake/3.24.0/CMake.app/Contents/bin/cmake --regenerate-during-build -S/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave -B/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build
   description = Re-running CMake...
   generator = 1
 
@@ -1527,7 +1527,7 @@ rule RERUN_CMAKE
 # Rule for re-checking globbed directories.
 
 rule VERIFY_GLOBS
-  command = /Users/kimminjoong/.espressif/tools/cmake/3.24.0/CMake.app/Contents/bin/cmake -P /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/CMakeFiles/VerifyGlobs.cmake
+  command = /Users/kimminjoong/.espressif/tools/cmake/3.24.0/CMake.app/Contents/bin/cmake -P /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/CMakeFiles/VerifyGlobs.cmake
   description = Re-checking globbed directories...
   generator = 1
 
