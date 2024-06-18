@@ -135,10 +135,10 @@ extern "C" void app_main(void)
     DK42688_SPI IMU(&IMU_spi_config);
     // IC_SPI ic_left(&IC_left);
     // IC_SPI ic_right(&IC_right);
-    IMU.begin();
+    IMU.begin();    
     // ic_left.begin();
     // ic_right.begin();
-    rosidl_runtime_c__String frame_id;
+    // rosidl_runtime_c__String frame_id;
     // frame_id.data = "imu_link";
     // frame_id.size = strlen(frame_id.data);
     // frame_id.capacity = strlen(frame_id.data) + 1;

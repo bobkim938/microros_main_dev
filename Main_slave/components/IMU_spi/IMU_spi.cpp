@@ -250,7 +250,7 @@ esp_err_t DK42688_SPI::set_aaf_bandwidth(uint8_t bandwidth, std::string which_se
     } else if(bandwidth > 53 && bandwidth <= 63){
         AAF_bitShift = 3;
     }
-    AAF_deltSqr = 3968;
+    AAF_deltSqr = bandwidth * bandwidth;
     uint8_t accel_bw = (bandwidth << 1) | 0x00;
     uint8_t AAF_DELTSQR = AAF_deltSqr >> 8;
     uint8_t AAF = 0x00;
