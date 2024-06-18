@@ -99,6 +99,14 @@ esp_err_t IC_SPI::rate_conf(IC_rate rate) {
     return ret;
 }
 
+esp_err_t IC_SPI::reset_cnt() {
+    esp_err_t ret = write_spi(AM_IP_4kreg::CMD_A, WRA);
+    if(ret != ESP_OK) return ret;
+    ret = write_spi(0x01, WRD);
+    if(ret != ESP_OK) return ret;
+    return ret;
+}
+
 esp_err_t IC_SPI::write_CFG1() {
     esp_err_t ret = write_spi(AM_IP_4kreg::CFG1_A, WRA);
     if(ret != ESP_OK) return ret;

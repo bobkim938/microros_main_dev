@@ -82,6 +82,7 @@ class IC_SPI {
         esp_err_t readSTAT();
         int32_t readMVAL();
         esp_err_t rate_conf(IC_rate rate);
+        esp_err_t reset_cnt();
 
     private:
         uint8_t HWA = 0b0000;
