@@ -60,8 +60,9 @@ IC_SPI_Config IC_right = {
 };
 
 i2c_master_config i2c_config = {
-    .sda = GPIO_NUM_18, 
-    .scl = GPIO_NUM_19, 
+    .sda = GPIO_NUM_15, 
+    .scl = GPIO_NUM_16, 
+    .slaveAddr = 0x0A
 };
 
 
@@ -117,6 +118,15 @@ void node_init() {
 
 extern "C" void app_main(void)
 {   
+    // uint8_t data[6] = {0xA0, 0x01, 0xB1, 0x02, 0xC2, 0x03};
+        uint8_t data[6] = {01, 02, 03};
+    i2c_master i2c(&i2c_config);
+    i2c.begin();
+    while(1) {
+        i2c.i2c_send_DO(data);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+
     // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
     // rmw_uros_set_custom_transport(
     //     true,
@@ -131,10 +141,10 @@ extern "C" void app_main(void)
     // #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
 
     // node_init();
-    DK42688_SPI IMU(&IMU_spi_config);
+    // DK42688_SPI IMU(&IMU_spi_config);
     // IC_SPI ic_left(&IC_left);
     // IC_SPI ic_right(&IC_right);
-    IMU.begin();    
+    // IMU.begin();    
     // ic_left.begin();
     // ic_right.begin();
     // rosidl_runtime_c__String frame_id;

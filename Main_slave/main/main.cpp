@@ -4,8 +4,8 @@
 #include "i2c_slave.h"
 
 i2c_slave_config i2c_conf = {
-	.sda = GPIO_NUM_18,
-	.scl = GPIO_NUM_19,
+    .sda = GPIO_NUM_15, 
+    .scl = GPIO_NUM_16, 
 	.slaveAddr = 0x0A
 };
 
@@ -17,17 +17,10 @@ DI_DO_SPI_config DD_spi_config = {
 };
 
 extern "C" void app_main(void) {
-	// i2c_master i2c(&i2c_conf);
-	// i2c.add_slave_device(0x0A);
-	// uint8_t data = 1;
-	// while(1) {
-	// 	i2c.i2c_transmit(&data);
-	// 	data++;
-	// 	if(data > 10) {
-	// 		data = 1;
-	// 	}
-	// 	vTaskDelay(1000 / portTICK_PERIOD_MS);
-	// }
+	i2c_slave i2c(&i2c_conf);
+	while(1) {
+		uint8_t a = i2c.i2c_read();
+	}
 
 	DI_DO_SPI dido(&DD_spi_config);
 	dido.begin();

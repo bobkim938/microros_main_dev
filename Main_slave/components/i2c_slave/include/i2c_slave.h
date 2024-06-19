@@ -26,11 +26,16 @@ static IRAM_ATTR bool i2c_slave_rx_done_callback(i2c_slave_dev_handle_t channel,
 class i2c_slave {
     public:
         i2c_slave(i2c_slave_config* slave_config);
-        uint8_t i2c_read();
+        uint32_t i2c_read();
  
     private:
         i2c_slave_config_t slv_conf = {};
         i2c_slave_dev_handle_t slv_handle;
         i2c_slave_event_callbacks_t cbs;
         i2c_slave_rx_done_event_data_t rx_data;
+
+        uint8_t DO_ack[0] = {};
+        uint8_t DO_nack[0] = {};
+        uint8_t DO_cnt = 0;
+        uint32_t parsed_data = 0;
 };
