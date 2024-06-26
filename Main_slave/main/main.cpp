@@ -18,6 +18,7 @@ DI_DO_SPI_config DD_spi_config = {
 
 extern "C" void app_main(void) {
 	i2c_slave i2c(&i2c_conf);
+	uint8_t current_DI[3] = {0x13, 0x23, 0x33}; // DI values read currently
 	while(1) {
 		uint8_t a = i2c.i2c_read();
 	}

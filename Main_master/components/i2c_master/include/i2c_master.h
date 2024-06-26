@@ -23,7 +23,7 @@ class i2c_master {
     public:
         i2c_master(i2c_master_config* conf);
         esp_err_t begin();
-        esp_err_t i2c_send_DO(uint8_t* data);
+        esp_err_t i2c_send_DO(uint8_t* data, uint8_t index);
         esp_err_t i2c_read_DI();
     
     private:
@@ -35,5 +35,8 @@ class i2c_master {
 
         uint8_t DI_data[3];
         uint8_t recvbuf[0] = {};
+
+        uint32_t DI_fromSlave = 0;
+        uint8_t diCnt = 0;
 
 };

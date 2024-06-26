@@ -36,15 +36,10 @@ uint32_t i2c_slave::i2c_read() {
     if (xQueueReceive(receive_queue, &rx_data, 10) == pdPASS) {
         if(DO_cnt == 0) {
             ESP_LOGI("I2C", "Data received 1: %d", *data_rcv);
-            parsed_data |= (*data_rcv << 16);
-            DO_cnt++;
-        }
-        else if(DO_cnt == 1) {
-            ESP_LOGI("I2C", "Data received 2: %d", *data_rcv);
             parsed_data |= (*data_rcv << 8);
             DO_cnt++;
         }
-        else if(DO_cnt == 2) {
+        else if(DO_cnt == 1) {
             ESP_LOGI("I2C", "Data received 3: %d", *data_rcv);
             parsed_data |= *data_rcv;
             DO_cnt = 0;
@@ -61,5 +56,16 @@ uint32_t i2c_slave::i2c_read() {
     vQueueDelete(receive_queue); // Delete the queue to free resources
 
     return 0;
+}
+
+esp_err_t i2c_slave::i2c_send_DI(uint8_t* data, uint8_t index) {
+    for(int i = 0; i < 3; i++) {
+        ret = i2c_slave_transmit(slv_handle, data + i, sizeof(data + i), -1);
+        if(ret != ESP_OK) {
+                ESP_LOGE(TAG, "Failed to transmit data");
+                return ret;
+            }
+    }
+    return ret;
 }
 

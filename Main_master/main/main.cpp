@@ -119,11 +119,12 @@ void node_init() {
 extern "C" void app_main(void)
 {   
     // uint8_t data[6] = {0xA0, 0x01, 0xB1, 0x02, 0xC2, 0x03};
-        uint8_t data[6] = {01, 02, 03};
+    // uint8_t data[6] = {0x11, 0x22, 0x33};
+    uint8_t slave_do[3] = {0x01, 0x11};
     i2c_master i2c(&i2c_config);
     i2c.begin();
     while(1) {
-        i2c.i2c_send_DO(data);
+        i2c.i2c_send_DO(slave_do, 2);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 

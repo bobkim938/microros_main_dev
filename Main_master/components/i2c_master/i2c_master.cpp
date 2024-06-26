@@ -27,8 +27,8 @@ esp_err_t i2c_master::begin() {
     return ret;
 }
 
-esp_err_t i2c_master::i2c_send_DO(uint8_t* data) {
-    for(int i = 0; i < 3; i++) {
+esp_err_t i2c_master::i2c_send_DO(uint8_t* data, uint8_t index) {
+    for(int i = 0; i < index; i++) {
         ret = i2c_master_transmit(i2c_master_handle, data + i, sizeof(data + i), -1);
         if(ret != ESP_OK) {
             ESP_LOGE(TAG, "Failed to transmit data");
@@ -39,20 +39,28 @@ esp_err_t i2c_master::i2c_send_DO(uint8_t* data) {
 }
 
 esp_err_t i2c_master::i2c_read_DI() {
-    ret = i2c_master_receive(i2c_master_handle, DI_data, sizeof(DI_data), -1);
+    if(diCnt == 0) {
+        DI_fromSlave = 0;
+    }
+    uint8_t* data_rcv = (uint8_t *)(malloc(sizeof(uint8_t)));
+    ret = i2c_master_receive(i2c_master_handle, data_rcv, sizeof(data_rcv), -1);
+    ESP_LOGI("I2C", "Data received 3: %d", *data_rcv);
     if(ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to receive data");
         return ret;
     }
-    ret = i2c_master_receive(i2c_master_handle, DI_data + 1, sizeof(DI_data + 1), -1);
+    ret = i2c_master_receive(i2c_master_handle, data_rcv, sizeof(data_rcv), -1);
+    ESP_LOGI("I2C", "Data received 3: %d", *data_rcv);
     if(ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to receive data");
         return ret;
     }
-    ret = i2c_master_receive(i2c_master_handle, DI_data + 2, sizeof(DI_data + 2), -1);
+    ret = i2c_master_receive(i2c_master_handle, data_rcv, sizeof(data_rcv), -1);
+    ESP_LOGI("I2C", "Data received 3: %d", *data_rcv);
     if(ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to receive data");
         return ret;
     }
+
     return ret;
 }
