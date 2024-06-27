@@ -7,6 +7,7 @@ i2c_master::i2c_master(i2c_master_config* conf) {
     i2c_mst_config.i2c_port = I2C_NUM_0;
     i2c_mst_config.glitch_ignore_cnt = 7;
     i2c_mst_config.flags.enable_internal_pullup = true;
+    i2c_mst_config.intr_priority = 3;
 
     ESP_slave.dev_addr_length = I2C_ADDR_BIT_LEN_7;
     ESP_slave.device_address = conf -> slaveAddr;
@@ -27,7 +28,7 @@ esp_err_t i2c_master::begin() {
     return ret;
 }
 
-esp_err_t i2c_master::i2c_send_DO(uint8_t* data, uint8_t index) {
+esp_err_t i2c_master::i2c_send_DO(uint8_t* data, uint8_t index) { // first byte 0x00 for DO cmd
     for(int i = 0; i < index; i++) {
         ret = i2c_master_transmit(i2c_master_handle, data + i, sizeof(data + i), -1);
         if(ret != ESP_OK) {
@@ -39,28 +40,37 @@ esp_err_t i2c_master::i2c_send_DO(uint8_t* data, uint8_t index) {
 }
 
 esp_err_t i2c_master::i2c_read_DI() {
+    ret = i2c_master_transmit(i2c_master_handle, DI_cmd, sizeof(DI_cmd), -1);
     if(diCnt == 0) {
         DI_fromSlave = 0;
+        diCnt = 1;
     }
     uint8_t* data_rcv = (uint8_t *)(malloc(sizeof(uint8_t)));
     ret = i2c_master_receive(i2c_master_handle, data_rcv, sizeof(data_rcv), -1);
-    ESP_LOGI("I2C", "Data received 3: %d", *data_rcv);
+    ESP_LOGI("I2C", "Data received 1: %d", *data_rcv);
+    DI_fromSlave |= *data_rcv << (16);
+    if(ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to receive data");
+        return ret;
+    }
+    ret = i2c_master_receive(i2c_master_handle, data_rcv, sizeof(data_rcv), -1);
+    ESP_LOGI("I2C", "Data received 2: %d", *data_rcv);
+    DI_fromSlave |= *data_rcv << (8);
     if(ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to receive data");
         return ret;
     }
     ret = i2c_master_receive(i2c_master_handle, data_rcv, sizeof(data_rcv), -1);
     ESP_LOGI("I2C", "Data received 3: %d", *data_rcv);
+    DI_fromSlave |= *data_rcv;
     if(ret != ESP_OK) {
         ESP_LOGE(TAG, "Failed to receive data");
         return ret;
     }
-    ret = i2c_master_receive(i2c_master_handle, data_rcv, sizeof(data_rcv), -1);
-    ESP_LOGI("I2C", "Data received 3: %d", *data_rcv);
-    if(ret != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to receive data");
-        return ret;
-    }
-
+    free(data_rcv);
+    diCnt = 0;
+    printf("DI from slave: 0x%04lX\n", DI_fromSlave);
+ 
     return ret;
 }
+

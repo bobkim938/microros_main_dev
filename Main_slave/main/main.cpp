@@ -21,18 +21,21 @@ extern "C" void app_main(void) {
 	uint8_t current_DI[3] = {0x13, 0x23, 0x33}; // DI values read currently
 	while(1) {
 		uint8_t a = i2c.i2c_read();
+		if(i2c.get_di() == true) {
+			i2c.set_di(current_DI);
+		}
 	}
 
-	DI_DO_SPI dido(&DD_spi_config);
-	dido.begin();
-	std::chrono::microseconds total_duration(0);
-	for(int i = 0; i < 100; i++) {
-		auto start_time = std::chrono::high_resolution_clock::now();
-		dido.test_read();
-		auto end_time = std::chrono::high_resolution_clock::now();
-		auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-        total_duration += duration;
-	}
-	double average_duration = static_cast<double>(total_duration.count()) / 100;
-    std::cout << "Average time per loop iteration: " << average_duration << " microseconds" << std::endl;
+	// DI_DO_SPI dido(&DD_spi_config);
+	// dido.begin();
+	// std::chrono::microseconds total_duration(0);
+	// for(int i = 0; i < 100; i++) {
+	// 	auto start_time = std::chrono::high_resolution_clock::now();
+	// 	dido.test_read();
+	// 	auto end_time = std::chrono::high_resolution_clock::now();
+	// 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+    //     total_duration += duration;
+	// }
+	// double average_duration = static_cast<double>(total_duration.count()) / 100;
+    // std::cout << "Average time per loop iteration: " << average_duration << " microseconds" << std::endl;
 }

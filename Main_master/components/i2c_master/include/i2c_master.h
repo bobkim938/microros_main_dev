@@ -3,7 +3,6 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
-#include <cstdint>
 
 #define ACK_CHECK_EN 0x1                        
 #define ACK_CHECK_DIS 0x0                      
@@ -35,6 +34,7 @@ class i2c_master {
 
         uint8_t DI_data[3];
         uint8_t recvbuf[0] = {};
+        uint8_t DI_cmd[1] = {0xFF};
 
         uint32_t DI_fromSlave = 0;
         uint8_t diCnt = 0;
