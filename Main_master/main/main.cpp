@@ -116,11 +116,13 @@ void node_init() {
     RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
 }
 
+
 extern "C" void app_main(void)
 {   
     uint8_t slave_do[3] = {0xBB, 0x01, 0x11};
     i2c_master i2c(&i2c_config);
     i2c.begin();
+
     while(1) {
         // i2c.i2c_send_DO(slave_do, 3);
         // vTaskDelay(1000 / portTICK_PERIOD_MS);

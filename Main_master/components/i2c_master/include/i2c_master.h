@@ -18,18 +18,27 @@ typedef struct {
 // DO 20 bits
 // DI 24 bits
 
+static IRAM_ATTR bool i2c_master_rx_done_callback(i2c_master_dev_handle_t channel, const i2c_master_event_data_t *edata, void *user_data)
+{
+    BaseType_t high_task_wakeup = pdFALSE;
+    QueueHandle_t receive_queue = (QueueHandle_t)user_data;
+    xQueueSendFromISR(receive_queue, edata, &high_task_wakeup);
+    return high_task_wakeup == pdTRUE;
+}
+
 class i2c_master {
     public:
         i2c_master(i2c_master_config* conf);
         esp_err_t begin();
         esp_err_t i2c_send_DO(uint8_t* data, uint8_t index);
-        esp_err_t i2c_read_DI();
+        uint32_t i2c_read_DI();
     
     private:
         i2c_master_bus_config_t i2c_mst_config = {};
         i2c_master_bus_handle_t i2c_mst_handle;
         i2c_device_config_t ESP_slave = {};
         i2c_master_dev_handle_t i2c_master_handle;
+        i2c_master_event_callbacks_t cbs;
         esp_err_t ret;
 
         uint8_t DI_data[3];

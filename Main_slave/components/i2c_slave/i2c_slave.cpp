@@ -56,11 +56,12 @@ uint32_t i2c_slave::i2c_read() {
 
         if(*data_rcv == 0xBB && !DO_ack_flag && !DI_ack_flag) {
             DO_ack_flag = true;
-            printf("DO acknowlodged\n");
+            // printf("DO acknowlodged\n");
         }
         else if(*data_rcv == 0xFF && !DI_ack_flag && !DO_ack_flag) {
             DI_ack_flag = true;
-            printf("DI acknowlodged\n");
+            new_DI = true;
+            // printf("DI acknowlodged\n");
         }
     } else {
         ESP_LOGE("I2C", "Failed to receive data");
@@ -74,7 +75,7 @@ uint32_t i2c_slave::i2c_read() {
 
 esp_err_t i2c_slave::i2c_send_DI(uint8_t* data, uint8_t index) {
     for(int i = 0; i < 3; i++) {
-        ret = i2c_slave_transmit(slv_handle, data + i, sizeof(data + i), -1);
+        ret = i2c_slave_transmit(slv_handle, data + i, 1, -1);
         printf("Data sent: %d\n", *(data + i));
         if(ret != ESP_OK) {
                 ESP_LOGE(TAG, "Failed to transmit data");
@@ -85,7 +86,8 @@ esp_err_t i2c_slave::i2c_send_DI(uint8_t* data, uint8_t index) {
 }
 
 bool i2c_slave::get_di() {
-    if(DI_ack_flag) {
+    if(new_DI) {
+        new_DI = false;
         return true;
     }
     else {
