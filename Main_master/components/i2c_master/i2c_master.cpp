@@ -42,63 +42,72 @@ esp_err_t i2c_master::i2c_send_DO(uint8_t* data, uint8_t index) { // first byte 
     return ret;
 }
 
-uint32_t i2c_master::i2c_read_DI() {
-    if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "Failed to transmit read DI command");
-        return 0;
-    }
-    uint8_t* data_rcv = (uint8_t *)(malloc(sizeof(uint8_t)));
+// uint32_t i2c_master::i2c_read_DI() {
+//     if (ret != ESP_OK) {
+//         ESP_LOGE(TAG, "Failed to transmit read DI command");
+//         return 0;
+//     }
+//     uint8_t* data_rcv = (uint8_t *)(malloc(sizeof(uint8_t)));
  
-    QueueHandle_t receive_queue = xQueueCreate(1, sizeof(i2c_master_event_data_t));
-    if (receive_queue == NULL) {
-        free(data_rcv);
-        ESP_LOGE("I2C", "Failed to create queue");
-        return 0;
-    }
+//     QueueHandle_t receive_queue = xQueueCreate(1, sizeof(i2c_master_event_data_t));
+//     if (receive_queue == NULL) {
+//         free(data_rcv);
+//         ESP_LOGE("I2C", "Failed to create queue");
+//         return 0;
+//     }
  
-    cbs.on_trans_done = i2c_master_rx_done_callback;
-    ESP_ERROR_CHECK(i2c_master_register_event_callbacks(i2c_master_handle, &cbs, receive_queue));
-    ESP_ERROR_CHECK(i2c_master_receive(i2c_master_handle, data_rcv, 1, -1));
+//     cbs.on_trans_done = i2c_master_rx_done_callback;
+//     ESP_ERROR_CHECK(i2c_master_register_event_callbacks(i2c_master_handle, &cbs, receive_queue));
+//     ESP_ERROR_CHECK(i2c_master_receive(i2c_master_handle, data_rcv, 1, -1));
  
-    i2c_master_event_data_t rx_data;
+//     i2c_master_event_data_t rx_data;
  
-   if (diCnt == 0) {
-        DI_fromSlave = 0;
-        esp_err_t ret = i2c_master_transmit(i2c_master_handle, DI_cmd, sizeof(DI_cmd), portMAX_DELAY); // Consider using a specific timeout instead of portMAX_DELAY
-        if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to transmit read DI command");
-            return 0;
-        }
-        diCnt++;
-    }      
+//    if (diCnt == 0) {
+//         DI_fromSlave = 0;
+//         esp_err_t ret = i2c_master_transmit(i2c_master_handle, DI_cmd, sizeof(DI_cmd), portMAX_DELAY); // Consider using a specific timeout instead of portMAX_DELAY
+//         if (ret != ESP_OK) {
+//             ESP_LOGE(TAG, "Failed to transmit read DI command");
+//             return 0;
+//         }
+//         diCnt++;
+//     }      
  
-    if (xQueueReceive(receive_queue, &rx_data, pdMS_TO_TICKS(100)) == pdPASS) {
-        if(diCnt == 1) {
-            ESP_LOGI("I2C", "Data received 1: %d", *data_rcv);
-            DI_fromSlave |= ((uint32_t)(*data_rcv)) << 16;
-            diCnt++;
-        }
-        else if(diCnt == 2) {
-            ESP_LOGI("I2C", "Data received 2: %d", *data_rcv);
-            DI_fromSlave |= ((uint32_t)(*data_rcv)) << 8;
-            diCnt++;
-        }
-        else if(diCnt == 3) {
-            ESP_LOGI("I2C", "Data received 3: %d", *data_rcv);
-            DI_fromSlave |= ((uint32_t)(*data_rcv));
-            diCnt = 0;
-            printf("DI from slave: 0x%06lX\n", DI_fromSlave);
-            free(data_rcv);
-            vQueueDelete(receive_queue);
-            return DI_fromSlave;
-        }
-    }
-    else {
-        ESP_LOGE("I2C", "Failed to receive data");
-        return 0;
-    }
-    free(data_rcv); // free allocated memory
-    vQueueDelete(receive_queue); // delete the queue to free resources
+//     if (xQueueReceive(receive_queue, &rx_data, pdMS_TO_TICKS(100)) == pdPASS) {
+//         if(diCnt == 1) {
+//             ESP_LOGI("I2C", "Data received 1: %d", *data_rcv);
+//             DI_fromSlave |= ((uint32_t)(*data_rcv)) << 16;
+//             diCnt++;
+//         }
+//         else if(diCnt == 2) {
+//             ESP_LOGI("I2C", "Data received 2: %d", *data_rcv);
+//             DI_fromSlave |= ((uint32_t)(*data_rcv)) << 8;
+//             diCnt++;
+//         }
+//         else if(diCnt == 3) {
+//             ESP_LOGI("I2C", "Data received 3: %d", *data_rcv);
+//             DI_fromSlave |= ((uint32_t)(*data_rcv));
+//             diCnt = 0;
+//             printf("DI from slave: 0x%06lX\n", DI_fromSlave);
+//             free(data_rcv);
+//             vQueueDelete(receive_queue);
+//             return DI_fromSlave;
+//         }
+//     }
+//     else {
+//         ESP_LOGE("I2C", "Failed to receive data");
+//         return 0;
+//     }
+//     free(data_rcv); // free allocated memory
+//     vQueueDelete(receive_queue); // delete the queue to free resources
  
+//     return ESP_OK;
+// }
+
+esp_err_t i2c_master::read_di() {
+    i2c_master_transmit_receive(i2c_master_handle, DI_cmd, sizeof(DI_cmd), DI_data, 3, -1);
+    ESP_LOGI("I2C", "Data received 1: %d", DI_data[0]);
+    ESP_LOGI("I2C", "Data received 2: %d", DI_data[1]);
+    ESP_LOGI("I2C", "Data received 3: %d", DI_data[2]);
     return ESP_OK;
 }
+

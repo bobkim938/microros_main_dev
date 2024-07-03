@@ -3,6 +3,7 @@
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
+#include <cstring>
 
 #define ACK_CHECK_EN 0x1                        
 #define ACK_CHECK_DIS 0x0                      
@@ -18,20 +19,13 @@ typedef struct {
 // DO 20 bits
 // DI 24 bits
 
-static IRAM_ATTR bool i2c_master_rx_done_callback(i2c_master_dev_handle_t channel, const i2c_master_event_data_t *edata, void *user_data)
-{
-    BaseType_t high_task_wakeup = pdFALSE;
-    QueueHandle_t receive_queue = (QueueHandle_t)user_data;
-    xQueueSendFromISR(receive_queue, edata, &high_task_wakeup);
-    return high_task_wakeup == pdTRUE;
-}
-
 class i2c_master {
     public:
         i2c_master(i2c_master_config* conf);
         esp_err_t begin();
         esp_err_t i2c_send_DO(uint8_t* data, uint8_t index);
         uint32_t i2c_read_DI();
+        esp_err_t read_di();
     
     private:
         i2c_master_bus_config_t i2c_mst_config = {};
@@ -41,8 +35,7 @@ class i2c_master {
         i2c_master_event_callbacks_t cbs;
         esp_err_t ret;
 
-        uint8_t DI_data[3];
-        uint8_t recvbuf[0] = {};
+        uint8_t DI_data[3] = {};
         uint8_t DI_cmd[1] = {0xFF};
 
         uint32_t DI_fromSlave = 0;

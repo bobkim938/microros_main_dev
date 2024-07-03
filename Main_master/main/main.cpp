@@ -126,7 +126,8 @@ extern "C" void app_main(void)
     while(1) {
         // i2c.i2c_send_DO(slave_do, 3);
         // vTaskDelay(1000 / portTICK_PERIOD_MS);
-        i2c.i2c_read_DI();
+        // i2c.i2c_read_DI();
+        i2c.read_di();
     }
 
     // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
