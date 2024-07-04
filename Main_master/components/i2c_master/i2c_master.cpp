@@ -31,15 +31,26 @@ esp_err_t i2c_master::begin() {
     return ret;
 }
 
-esp_err_t i2c_master::i2c_send_DO(uint8_t* data, uint8_t index) { // first byte 0xBB for DO cmd
-    for(int i = 0; i < index; i++) {
-        ret = i2c_master_transmit(i2c_master_handle, data + i, sizeof(data + i), -1);
-        if(ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to transmit data");
-            return ret;
-        }
+esp_err_t i2c_master::i2c_send_DO(uint8_t* data) { // first byte 0xBB for DO cmd
+    ret = i2c_master_transmit(i2c_master_handle, data, 1, 10);
+    if(ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to transmit data");
+        return ret;
+    }
+    vTaskDelay(1);
+    ret = i2c_master_transmit(i2c_master_handle, data + 1, 1, 10);
+    if(ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to transmit data");
+        return ret;
+    }
+    vTaskDelay(1);
+    ret = i2c_master_transmit(i2c_master_handle, data + 2, 1, 10);
+    if(ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to transmit data");
+        return ret;
     }
     return ret;
+    vTaskDelay(1);
 }
 
 esp_err_t i2c_master::read_di() {

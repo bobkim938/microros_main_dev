@@ -38,10 +38,8 @@ class i2c_slave {
         i2c_slave_rx_done_event_data_t rx_data;
         esp_err_t ret;
 
-        uint8_t DO_ack[0] = {};
-        uint8_t DO_nack[0] = {};
         uint8_t DO_cnt = 0;
-        uint32_t parsed_data = 0;
+        uint32_t parsed_data_DO = 0;
 
         uint8_t current_DI[3] = {};
 

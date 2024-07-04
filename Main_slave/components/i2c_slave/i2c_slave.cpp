@@ -31,23 +31,23 @@ uint32_t i2c_slave::i2c_read() {
 
     i2c_slave_rx_done_event_data_t rx_data;
     if(DO_cnt == 0) {
-        parsed_data = 0;
+        parsed_data_DO = 0;
     }
     if (xQueueReceive(receive_queue, &rx_data, 10) == pdPASS) {
         if(DO_ack_flag && DO_cnt == 0) {
             ESP_LOGI("I2C", "Data received 1: %d", *data_rcv);
-            parsed_data |= (*data_rcv << 8);
+            parsed_data_DO |= (*data_rcv << 8);
             DO_cnt++;
         }
         else if(DO_ack_flag && DO_cnt == 1) {
             ESP_LOGI("I2C", "Data received 2: %d", *data_rcv);
-            parsed_data |= *data_rcv;
+            parsed_data_DO |= *data_rcv;
             DO_cnt = 0;
-            printf("Parsed Data: 0x%04lX\n", parsed_data);
+            printf("Parsed Data: 0x%04lX\n", parsed_data_DO);
             DO_ack_flag = false;
             free(data_rcv); 
             vQueueDelete(receive_queue); 
-            return parsed_data;
+            return parsed_data_DO;
         }
         else if(DI_ack_flag) {
             i2c_send_DI(current_DI, 3);

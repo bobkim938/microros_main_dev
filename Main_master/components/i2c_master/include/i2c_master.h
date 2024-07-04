@@ -23,7 +23,7 @@ class i2c_master {
     public:
         i2c_master(i2c_master_config* conf);
         esp_err_t begin();
-        esp_err_t i2c_send_DO(uint8_t* data, uint8_t index);
+        esp_err_t i2c_send_DO(uint8_t* data);
         uint32_t i2c_read_DI();
         esp_err_t read_di();
     
@@ -40,5 +40,13 @@ class i2c_master {
 
         uint32_t DI_fromSlave = 0;
         uint8_t diCnt = 0;
+
+    /*
+    SLAVE DOUT data format:
+    {0xBB, 0x0X, 0xXX} 
+    0xBB: first byte to indicate DO cmd
+    0x0X: LSB 2 bits for DO 9 and 8
+    0xXX: DO bit 7 to 0
+    */
 
 };
