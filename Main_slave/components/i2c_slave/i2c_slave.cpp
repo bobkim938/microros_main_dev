@@ -15,7 +15,7 @@ i2c_slave::i2c_slave(i2c_slave_config* slave_config) {
     ESP_ERROR_CHECK(i2c_new_slave_device(&slv_conf, &slv_handle));
 }
 
-uint32_t i2c_slave::i2c_read() {
+uint16_t i2c_slave::i2c_read() {
     uint8_t* data_rcv = (uint8_t *)(malloc(sizeof(uint8_t)));
     *data_rcv = 0;
     QueueHandle_t receive_queue = xQueueCreate(1, sizeof(i2c_slave_rx_done_event_data_t));
@@ -43,8 +43,9 @@ uint32_t i2c_slave::i2c_read() {
             ESP_LOGI("I2C", "Data received 2: %d", *data_rcv);
             parsed_data_DO |= *data_rcv;
             DO_cnt = 0;
-            printf("Parsed Data: 0x%04lX\n", parsed_data_DO);
+            printf("Parsed Data: 0x%04hX\n", parsed_data_DO);
             DO_ack_flag = false;
+            new_DO = true;
             free(data_rcv); 
             vQueueDelete(receive_queue); 
             return parsed_data_DO;
@@ -88,6 +89,16 @@ esp_err_t i2c_slave::i2c_send_DI(uint8_t* data, uint8_t index) {
 bool i2c_slave::get_di() {
     if(new_DI) {
         new_DI = false;
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool i2c_slave::get_do() {
+    if(new_DO) {
+        new_DO = false;
         return true;
     }
     else {

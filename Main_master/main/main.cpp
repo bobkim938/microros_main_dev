@@ -122,12 +122,13 @@ extern "C" void app_main(void)
     uint8_t slave_do[3] = {0xBB, 0x01, 0x11}; // first byte to indicating DO cmd
     i2c_master i2c(&i2c_config);
     i2c.begin();
+    i2c.i2c_send_DO(slave_do);
 
-    while(1) {
-        i2c.i2c_send_DO(slave_do);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        // i2c.read_di();
-    }
+    // while(1) {
+    //     i2c.i2c_send_DO(slave_do);
+    //     vTaskDelay(1000 / portTICK_PERIOD_MS);
+    //     // i2c.read_di();
+    // }
 
     // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
     // rmw_uros_set_custom_transport(
