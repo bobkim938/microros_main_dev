@@ -143,17 +143,17 @@ void remap_DI(uint8_t di0_data, uint8_t di1_data) {
 	// di1_data -> 0b{di23, di22, di21, di20, di19, di17, di11, di10}
 	// etract di17 only from di1_data
 	// ESPdi -> 0b{di0, di1, di12, di13, di14, di15, di16, di18}
-	// remap di0_data, di1_data, di_esp to di[3]
+	// remap di0_data, di1_data, di_esp to current_DI
 
-	// di[2] -> 0b{di7, di6, di5, di4, di3, di2, di1, di0}
-	// di[1] -> 0b{di15, di14, di13, di12, di11, di10, di9, di8}
-	// di[0] -> 0b{di23, di22, di21, di20, di19, di18, di17, di16}
+	// current_DI[2] -> 0b{di7, di6, di5, di4, di3, di2, di1, di0}
+	// current_DI[1] -> 0b{di15, di14, di13, di12, di11, di10, di9, di8}
+	// current_DI[0] -> 0b{di23, di22, di21, di20, di19, di18, di17, di16}
 	current_DI[2] = 0x00 | ESPdi[0] | (ESPdi[1] << 1);
 	current_DI[2] |= (di0_data << 2);
 	current_DI[1] = 0x00 | (ESPdi[2] << 4) | (ESPdi[3] << 5) | (ESPdi[4] << 6) | (ESPdi[5] << 7);
 	current_DI[1] |= (di0_data >> 6);
 	current_DI[0] = 0x00 | (ESPdi[6]) | (ESPdi[7] << 2);
-	current_DI[0] |= (di1_data & 0x04) | (di1_data << 4);
+	current_DI[0] |= ((di1_data & 0x04) >> 1) | (di1_data & 0xF8);
 	printf("DI0: 0x%02X\n", current_DI[0]);
 	printf("DI1: 0x%02X\n", current_DI[1]);
 	printf("DI2: 0x%02X\n", current_DI[2]);
