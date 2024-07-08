@@ -14,6 +14,7 @@ typedef struct {
     gpio_num_t mosi;
     gpio_num_t sclk;
     gpio_num_t cs;
+    bool bus_init;
 } DI_DO_SPI_config;
 
 enum DI_DO_REG : uint8_t {
@@ -28,7 +29,7 @@ class DI_DO_SPI {
     public:
         DI_DO_SPI(DI_DO_SPI_config* spi_config);
         esp_err_t begin();
-        esp_err_t test_read();
+        uint8_t read_di();
         
 
     private:
@@ -42,6 +43,8 @@ class DI_DO_SPI {
         uint8_t recvbuf[1] = {0x00};
 
         esp_err_t read_spi(uint8_t reg);
+
+        bool bus_init = false;
 };
 
 

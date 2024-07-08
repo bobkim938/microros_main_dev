@@ -53,13 +53,17 @@ esp_err_t i2c_master::i2c_send_DO(uint8_t* data) { // first byte 0xBB for DO cmd
     vTaskDelay(1);
 }
 
-esp_err_t i2c_master::read_di() {
+uint32_t i2c_master::read_di() {
     DI_fromSlave = 0;
     ret = i2c_master_transmit_receive(i2c_master_handle, DI_cmd, sizeof(DI_cmd), DI_data, 3, -1);
+    if(ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to rectrieve DI");
+        return ret;
+    }
     ESP_LOGI("I2C", "Data received 1: %d", DI_data[0]);
     ESP_LOGI("I2C", "Data received 2: %d", DI_data[1]);
     ESP_LOGI("I2C", "Data received 3: %d", DI_data[2]);
     DI_fromSlave = ((uint32_t)DI_data[0]) << 16 | ((uint32_t)DI_data[1]) << 8 | ((uint32_t)DI_data[2]);
-    return ret;
+    return DI_fromSlave;
 }
 
