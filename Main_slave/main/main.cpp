@@ -50,8 +50,11 @@ uint8_t current_DI[3] = {}; // index 0 (MSB) -> index 2 (LSB)
 void set_dOut(uint16_t dOut);
 void read_DI();
 void remap_DI(uint8_t di0_data, uint8_t di1_data);
+void reset_gpio();
 
 extern "C" void app_main(void) {
+	reset_gpio();
+
 	gpio_set_direction(DO0, GPIO_MODE_OUTPUT);
 	gpio_set_direction(DO1, GPIO_MODE_OUTPUT);
 	gpio_set_direction(DO2, GPIO_MODE_OUTPUT);
@@ -71,6 +74,13 @@ extern "C" void app_main(void) {
 	gpio_set_direction(DI15, GPIO_MODE_INPUT);
 	gpio_set_direction(DI16, GPIO_MODE_INPUT);
 	gpio_set_direction(DI18, GPIO_MODE_INPUT);
+
+	gpio_reset_pin(GPIO_NUM_48);
+	gpio_reset_pin(GPIO_NUM_21);
+	gpio_set_direction(GPIO_NUM_48, GPIO_MODE_OUTPUT);
+	gpio_set_direction(GPIO_NUM_21, GPIO_MODE_OUTPUT);
+	gpio_set_level(GPIO_NUM_48, 1);
+	gpio_set_level(GPIO_NUM_21, 1);
 
 	i2c_slave i2c(&i2c_conf);
 	DI_DO_SPI di0(&DD_spi_config_0);
@@ -106,6 +116,16 @@ void set_dOut(uint16_t dOut) {
 	bool d7 = dOut & 0x0080;
 	bool d8 = dOut & 0x0100;
 	bool d9 = dOut & 0x0200;
+	printf("d0: %d\n", d0);
+	printf("d1: %d\n", d1);
+	printf("d2: %d\n", d2);
+	printf("d3: %d\n", d3);
+	printf("d4: %d\n", d4);
+	printf("d5: %d\n", d5);
+	printf("d6: %d\n", d6);
+	printf("d7: %d\n", d7);
+	printf("d8: %d\n", d8);
+	printf("d9: %d\n", d9);
 	gpio_set_level(DO0, d0);
 	gpio_set_level(DO1, d1);
 	gpio_set_level(DO2, d2);
@@ -157,4 +177,26 @@ void remap_DI(uint8_t di0_data, uint8_t di1_data) {
 	printf("DI0: 0x%02X\n", current_DI[0]);
 	printf("DI1: 0x%02X\n", current_DI[1]);
 	printf("DI2: 0x%02X\n", current_DI[2]);
+}
+
+void reset_gpio() {
+	gpio_reset_pin(DO0);
+	gpio_reset_pin(DO1);
+	gpio_reset_pin(DO2);
+	gpio_reset_pin(DO3);
+	gpio_reset_pin(DO4);
+	gpio_reset_pin(DO5);
+	gpio_reset_pin(DO6);
+	gpio_reset_pin(DO7);
+	gpio_reset_pin(DO8);
+	gpio_reset_pin(DO9);
+
+	gpio_reset_pin(DI0);
+	gpio_reset_pin(DI1);
+	gpio_reset_pin(DI12);
+	gpio_reset_pin(DI13);
+	gpio_reset_pin(DI14);
+	gpio_reset_pin(DI15);
+	gpio_reset_pin(DI16);
+	gpio_reset_pin(DI18);
 }

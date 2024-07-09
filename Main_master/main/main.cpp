@@ -14,6 +14,7 @@
 #include <sensor_msgs/msg/imu.h>
 #include <std_msgs/msg/int32_multi_array.h>
 #include <std_msgs/msg/multi_array_dimension.h>
+#include <std_msgs/msg/u_int32.h>
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 
@@ -28,8 +29,10 @@ using namespace std;
 
 rcl_publisher_t publisher;
 rcl_publisher_t pub_encoder;
+rcl_publisher_t di_publisher;
 sensor_msgs__msg__Imu imu_msg = {};
 std_msgs__msg__Int32MultiArray encoder_msg;
+std_msgs__msg__UInt32 di_data;
 
 static size_t uart_port = UART_NUM_0; // UART port for Micro_ROS
 
@@ -81,6 +84,14 @@ void publish_encoderData() {
         printf("Failed to publish encoder data");
     }
 }
+
+void publish_DI() {
+    rcl_ret_t rc;
+    rc = rcl_publish(&di_publisher, &di_data, NULL);
+    if (rc != RCL_RET_OK) {
+        printf("Failed to publish DI data");
+    }
+}
  
 void node_init() {
     rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -98,19 +109,26 @@ void node_init() {
         ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
         "imu/data_raw"));
 
-    // create publisher for encoder data
-    encoder_msg.data.capacity = 2;
-    encoder_msg.data.size = 2; // Set size to 2 since we will populate 2 elements
-    encoder_msg.data.data = (int32_t *)malloc(encoder_msg.data.capacity * sizeof(int32_t));
-    if (encoder_msg.data.data == NULL) {
-        printf("Failed to allocate memory for encoder_msg.data.data\n");
-        vTaskDelete(NULL);
-    }
-    RCCHECK(rclc_publisher_init_best_effort(
-        &pub_encoder,
+    // // create publisher for encoder data
+    // encoder_msg.data.capacity = 2;
+    // encoder_msg.data.size = 2;
+    // encoder_msg.data.data = (int32_t *)malloc(encoder_msg.data.capacity * sizeof(int32_t));
+    // if (encoder_msg.data.data == NULL) {
+    //     printf("Failed to allocate memory for encoder_msg.data.data\n");
+    //     vTaskDelete(NULL);
+    // }
+    // RCCHECK(rclc_publisher_init_best_effort(
+    //     &pub_encoder,
+    //     &node,
+    //     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32MultiArray),
+    //     "encoder_data"));
+
+    // create publisher for DI data
+    RCCHECK(rclc_publisher_init_default(
+        &di_publisher,
         &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32MultiArray),
-        "encoder_data"));
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, UInt32),
+        "DI_data"));
 
     rclc_executor_t executor;
     RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
@@ -119,18 +137,6 @@ void node_init() {
 
 extern "C" void app_main(void)
 {   
-    uint8_t slave_do[3] = {0xBB, 0x01, 0x11}; // first byte to indicating DO cmd
-    i2c_master i2c(&i2c_config);
-    i2c.begin();
-    // i2c.i2c_send_DO(slave_do);
-
-    while(1) {
-        // i2c.i2c_send_DO(slave_do);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        uint32_t DI = i2c.read_di();
-        printf("DI: 0x%04lX\n", DI);
-    }
-
     // #if defined(RMW_UXRCE_TRANSPORT_CUSTOM)
     // rmw_uros_set_custom_transport(
     //     true,
@@ -143,8 +149,17 @@ extern "C" void app_main(void)
     // #else
     // #error micro-ROS transports misconfigured
     // #endif  // RMW_UXRCE_TRANSPORT_CUSTOM
-
     // node_init();
+    uint8_t slave_do[3] = {0xBB, 0x01, 0xFF}; // first byte to indicating DO cmd, second bit 2 MSB
+    i2c_master i2c(&i2c_config);
+    i2c.begin();
+
+    while(1) {
+        i2c.i2c_send_DO(slave_do);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // di_data.data = i2c.read_di();
+        // publish_DI();
+    }
     // DK42688_SPI IMU(&IMU_spi_config);
     // IC_SPI ic_left(&IC_left);
     // IC_SPI ic_right(&IC_right);
