@@ -2,16 +2,20 @@
 #include <iostream>
 #include "i2c_slave.h"
 
-# define DO0 GPIO_NUM_35
-# define DO1 GPIO_NUM_36
-# define DO2 GPIO_NUM_37
-# define DO3 GPIO_NUM_38
-# define DO4 GPIO_NUM_3
-# define DO5 GPIO_NUM_46
-# define DO6 GPIO_NUM_39
-# define DO7 GPIO_NUM_40
-# define DO8 GPIO_NUM_41
-# define DO9 GPIO_NUM_42
+# define DO0 GPIO_NUM_35 // 1
+# define DO1 GPIO_NUM_36 // 2
+# define DO2 GPIO_NUM_37 // 4
+# define DO3 GPIO_NUM_38 // 8
+# define DO4 GPIO_NUM_3 // 16
+# define DO5 GPIO_NUM_46 // 32
+# define DO6 GPIO_NUM_39 // 64
+# define DO7 GPIO_NUM_40 // 128
+# define DO8 GPIO_NUM_41 // 256
+# define DO9 GPIO_NUM_42 // 512
+
+# define BMS GPIO_NUM_48
+# define PASS1 GPIO_NUM_14
+# define PASS2 GPIO_NUM_21
 
 # define DI0 GPIO_NUM_2
 # define DI1 GPIO_NUM_1
@@ -21,6 +25,8 @@
 # define DI15 GPIO_NUM_6
 # define DI16 GPIO_NUM_7
 # define DI18 GPIO_NUM_19
+
+# define BATSW GPIO_NUM_47
 
 i2c_slave_config i2c_conf = {
     .sda = GPIO_NUM_15, 
@@ -48,6 +54,7 @@ bool ESPdi[8] = {};
 uint8_t current_DI[3] = {}; // index 0 (MSB) -> index 2 (LSB)
 
 void set_dOut(uint16_t dOut);
+void set_bms(uint16_t dOut);
 void read_DI();
 void remap_DI(uint8_t di0_data, uint8_t di1_data);
 void reset_gpio();
@@ -65,6 +72,9 @@ extern "C" void app_main(void) {
 	gpio_set_direction(DO7, GPIO_MODE_OUTPUT);
 	gpio_set_direction(DO8, GPIO_MODE_OUTPUT);
 	gpio_set_direction(DO9, GPIO_MODE_OUTPUT);
+	gpio_set_direction(BMS, GPIO_MODE_OUTPUT);
+	gpio_set_direction(PASS1, GPIO_MODE_OUTPUT);
+	gpio_set_direction(PASS2, GPIO_MODE_OUTPUT);
 
 	gpio_set_direction(DI0, GPIO_MODE_INPUT);
 	gpio_set_direction(DI1, GPIO_MODE_INPUT);
@@ -74,6 +84,7 @@ extern "C" void app_main(void) {
 	gpio_set_direction(DI15, GPIO_MODE_INPUT);
 	gpio_set_direction(DI16, GPIO_MODE_INPUT);
 	gpio_set_direction(DI18, GPIO_MODE_INPUT);
+	gpio_set_direction(BATSW, GPIO_MODE_INPUT);
 
 	// gpio_reset_pin(GPIO_NUM_48);
 	// gpio_reset_pin(GPIO_NUM_21);
@@ -110,6 +121,13 @@ extern "C" void app_main(void) {
 			set_dOut(dOut);
 			printf("DO: %d\n", dOut);
 		}
+		if(i2c.get_bms() == true) {
+			set_bms(dOut);
+		}
+		if(i2c.get_batSW() == true) {
+			bool batSW = gpio_get_level(BATSW);
+			i2c.set_batSW(batSW);
+		}
 	}
 }
 
@@ -144,6 +162,16 @@ void set_dOut(uint16_t dOut) {
 	gpio_set_level(DO7, d7);
 	gpio_set_level(DO8, d8);
 	gpio_set_level(DO9, d9);
+}
+
+void set_bms(uint16_t dOut) {
+	bool bms = dOut & 0x0001; // bit 0 indicating BMS
+	bool pass1 = dOut & 0x0002; // bit 1 indicating PASS1
+	bool pass2 = dOut & 0x0004; // bit 2 indicating PASS2
+
+	gpio_set_level(BMS, bms);
+	gpio_set_level(PASS1, pass1);
+	gpio_set_level(PASS2, pass2);
 }
 
 void read_DI() {
@@ -198,13 +226,17 @@ void reset_gpio() {
 	gpio_reset_pin(DO7);
 	gpio_reset_pin(DO8);
 	gpio_reset_pin(DO9);
+	gpio_reset_pin(BMS);
+	gpio_reset_pin(PASS1);
+	gpio_reset_pin(PASS2);
 
-	gpio_reset_pin(DI0);
-	gpio_reset_pin(DI1);
-	gpio_reset_pin(DI12);
-	gpio_reset_pin(DI13);
-	gpio_reset_pin(DI14);
-	gpio_reset_pin(DI15);
-	gpio_reset_pin(DI16);
-	gpio_reset_pin(DI18);
+	// gpio_reset_pin(DI0);
+	// gpio_reset_pin(DI1);
+	// gpio_reset_pin(DI12);
+	// gpio_reset_pin(DI13);
+	// gpio_reset_pin(DI14);
+	// gpio_reset_pin(DI15);
+	// gpio_reset_pin(DI16);
+	// gpio_reset_pin(DI18);
+	// gpio_reset_pin(BATSW);
 }

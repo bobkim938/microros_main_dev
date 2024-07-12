@@ -13,3 +13,4 @@ menu "micro-ROS example-app settings"
         Priority of micro-ros task higher value means higher priority
         
 endmenu
+

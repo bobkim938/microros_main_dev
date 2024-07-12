@@ -30,7 +30,10 @@ class i2c_slave {
         esp_err_t i2c_send_DI(uint8_t* data, uint8_t index);
         bool get_di();
         bool get_do();
+        bool get_bms();
+        bool get_batSW();
         void set_di(uint8_t* di_data);
+        void set_batSW(bool batsw);
  
     private:
         i2c_slave_config_t slv_conf = {};
@@ -44,8 +47,15 @@ class i2c_slave {
 
         uint8_t current_DI[3] = {};
 
+        uint8_t batSW = 0;
+
         bool DO_ack_flag = false;
         bool DI_ack_flag = false;
+        bool BMS_ack_flag = false;
+        bool batSW_ack_flag = false;
+
+        bool new_BMS = false;
         bool new_DI = false;
         bool new_DO = false;
+        bool new_batSW = false;
 };

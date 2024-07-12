@@ -54,15 +54,41 @@ uint16_t i2c_slave::i2c_read() {
             i2c_send_DI(current_DI, 3);
             DI_ack_flag = false;
         }
+        else if(BMS_ack_flag) {
+            ESP_LOGI("I2C", "Data received for BMS/PASS: %d", *data_rcv);
+            BMS_ack_flag = false;
+            new_BMS = true;
+            uint16_t rcv_msg = *data_rcv;
+            free(data_rcv); 
+            vQueueDelete(receive_queue); 
+            return rcv_msg;
+        }
+        else if(batSW_ack_flag) {
+            ret = i2c_slave_transmit(slv_handle, &batSW, 1, -1);
+            printf("batSW sent: %d\n", batSW);
+            if(ret != ESP_OK) {
+                ESP_LOGE(TAG, "Failed to transmit data");
+            }
+            batSW_ack_flag = false;
+        }
 
-        if(*data_rcv == 0xBB && !DO_ack_flag && !DI_ack_flag) {
+        if(*data_rcv == 0xBB && !DO_ack_flag && !DI_ack_flag && !BMS_ack_flag && !batSW_ack_flag) {
             DO_ack_flag = true;
             // printf("DO acknowlodged\n");
         }
-        else if(*data_rcv == 0xFF && !DI_ack_flag && !DO_ack_flag) {
+        else if(*data_rcv == 0xFF && !DI_ack_flag && !DO_ack_flag && !BMS_ack_flag && !batSW_ack_flag) {
             DI_ack_flag = true;
             new_DI = true;
             // printf("DI acknowlodged\n");
+        }
+        else if(*data_rcv == 0xCC && !DI_ack_flag && !DO_ack_flag && !BMS_ack_flag && !batSW_ack_flag) {
+            BMS_ack_flag = true;
+            // printf("BMS acknowlodged\n");
+        }
+        else if(*data_rcv == 0xDD && !DI_ack_flag && !DO_ack_flag && !BMS_ack_flag && !batSW_ack_flag) {
+            batSW_ack_flag = true;
+            new_batSW = true;
+            // printf("batSW acknowlodged\n");
         }
     } else {
         ESP_LOGE("I2C", "Failed to receive data");
@@ -106,8 +132,38 @@ bool i2c_slave::get_do() {
     }
 }
 
+bool i2c_slave::get_bms() {
+    if(new_BMS) {
+        new_BMS = false;
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool i2c_slave::get_batSW() {
+    if(new_batSW) {
+        new_batSW = false;
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 void i2c_slave::set_di(uint8_t* di_data) {
     for(int i = 0; i < 3; i++) {
         current_DI[i] = *(di_data + i);
+    }
+}
+
+void i2c_slave::set_batSW(bool batsw) {
+    if(batsw) {
+        this->batSW = 1;
+        printf("batSW On\n");
+    }
+    else {
+        this->batSW = 0;
     }
 }

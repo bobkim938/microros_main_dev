@@ -44,7 +44,7 @@ esp_err_t IC_SPI::begin() {
 }
 
 
-esp_err_t IC_SPI::readSTAT() { 
+uint16_t IC_SPI::readSTAT() { 
     esp_err_t ret = read_spi(AM_IP_4kreg::STAT_A, RD0);
     // printf("Received data[0]: 0x%04X\n", recvbuf[0]);
     ret = read_spi(0x00, RD1);
@@ -53,7 +53,7 @@ esp_err_t IC_SPI::readSTAT() {
     ret = read_spi(0x00, NOP);
     recvbuf[0] = SPI_SWAP_DATA_RX(recvbuf[0], 16);
     printf("Received data[2]: 0x%04X\n", recvbuf[0]);
-    return ret;
+    return recvbuf[0];
 }
 
 int32_t IC_SPI::readMVAL() { 

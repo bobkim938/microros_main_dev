@@ -67,3 +67,35 @@ uint32_t i2c_master::read_di() {
     return DI_fromSlave;
 }
 
+esp_err_t i2c_master::cntrl_BMSpass(uint8_t data) { 
+    // Bit 0: BMS, Bit 1: Pass1, Bit 2: Pass2
+    uint8_t toBe_transferred[2] = {};
+    toBe_transferred[0] = 0xCC;
+    toBe_transferred[1] = data;
+    ret = i2c_master_transmit(i2c_master_handle, toBe_transferred, 1, 10);
+    if(ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to transmit data");
+        return ret;
+    }
+    vTaskDelay(1);
+    ret = i2c_master_transmit(i2c_master_handle, toBe_transferred + 1, 1, 10);
+    return ret;
+}
+
+bool i2c_master::check_BATSW() {
+    ret = i2c_master_transmit_receive(i2c_master_handle, batSW_cmd, sizeof(batSW_cmd), &batSW, 1, -1);
+    printf("BATSW: %d\n", batSW);
+    if(ret != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to rectrieve BATSW");
+        return ret;
+    }
+    if(batSW == 0x01) {
+        printf("Battery Switch is ON\n");
+        return true; // true meaning switched on
+    }
+    else {
+        printf("Battery Switch is OFF\n");
+        return false;
+    }
+}
+
