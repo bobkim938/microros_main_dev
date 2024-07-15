@@ -2,6 +2,7 @@
 #include "IMU_SPI.h"
 #include "i2c_master.h"
 #include "IC_spi.h"
+#include "E-STOP.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -230,13 +231,17 @@ extern "C" void app_main(void)
     uint8_t slave_do[3] = {0xBB, 0x01, 0xFF}; // first byte to indicating DO cmd, second bit 2 MSB
     i2c_master i2c(&i2c_config);
     i2c.begin();
+    ESTOP estop;
+    estop.begin();
 
     while(1) {
         // i2c.i2c_send_DO(slave_do);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
         // di_data.data = i2c.read_di();
         // i2c.check_BATSW();
-        i2c.cntrl_BMSpass(0x04);
+        i2c.cntrl_BMSpass(0x01);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        i2c.cntrl_BMSpass(0x00);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
     // DK42688_SPI IMU(&IMU_spi_config);
     // IC_SPI ic_left(&IC_left);

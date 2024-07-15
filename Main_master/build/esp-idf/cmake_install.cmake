@@ -424,6 +424,11 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
+  include("/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/E-STOP/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
   include("/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_master/build/esp-idf/IC_spi/cmake_install.cmake")
 endif()
 
