@@ -235,13 +235,11 @@ extern "C" void app_main(void)
     estop.begin();
 
     while(1) {
-        // i2c.i2c_send_DO(slave_do);
+        i2c.i2c_send_DO(slave_do);
         // di_data.data = i2c.read_di();
         // i2c.check_BATSW();
-        i2c.cntrl_BMSpass(0x01);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        i2c.cntrl_BMSpass(0x00);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // i2c.cntrl_BMSpass(0x01);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
     // DK42688_SPI IMU(&IMU_spi_config);
     // IC_SPI ic_left(&IC_left);
