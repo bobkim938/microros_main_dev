@@ -7,6 +7,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "driver/gpio.h"
+#include <chrono>
 
 # define DO0 GPIO_NUM_35 // 1
 # define DO1 GPIO_NUM_36 // 2
@@ -37,6 +38,13 @@
 # define BATSW GPIO_NUM_47
 
 static QueueHandle_t gpio_evt_queue = NULL;
+std::chrono::microseconds estop0(0);
+std::chrono::microseconds estop1(0);
+
+auto estop0_start = std::chrono::high_resolution_clock::now();
+auto estop1_start = std::chrono::high_resolution_clock::now();
+bool ESTOP0_triggered = false;
+bool ESTOP1_triggered = false;
 
 i2c_slave_config i2c_conf = {
     .sda = GPIO_NUM_15, 
@@ -72,6 +80,14 @@ static void gpio_task_example(void* arg)
     for (;;) {
         if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
             printf("GPIO[%"PRIu32"] intr, val: %d\n", io_num, gpio_get_level((gpio_num_t)io_num));
+			if (io_num == DI0) {
+				estop0_start = std::chrono::high_resolution_clock::now();
+				ESTOP0_triggered = false;
+			}
+			if (io_num == DI1) {
+				estop1_start = std::chrono::high_resolution_clock::now();
+				ESTOP1_triggered = false;
+			}
         }
     }
 }
@@ -90,27 +106,19 @@ void handle_interrupt(void* param);
 
 extern "C" void app_main(void) {
 	reset_gpio();
+
 	gpio_config_t io_conf = {};
-    //interrupt of rising edge
     io_conf.intr_type = GPIO_INTR_POSEDGE;
-    //bit mask of the pins, use GPIO4/5 here
     io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
-    //set as input mode
     io_conf.mode = GPIO_MODE_INPUT;
-    //enable pull-up mode
     io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     gpio_config(&io_conf);
 
-    //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-    //start gpio task
     xTaskCreate(gpio_task_example, "gpio_task_example", 2048, NULL, 10, NULL);
 
-    //install gpio isr service
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
-    //hook isr handler for specific gpio pin
     gpio_isr_handler_add(DI0, gpio_isr_handler, (void*) DI0);
-    //hook isr handler for specific gpio pin
     gpio_isr_handler_add(DI1, gpio_isr_handler, (void*) DI1);
 
 
@@ -141,6 +149,23 @@ extern "C" void app_main(void) {
 		if(i2c.get_batSW() == true) {
 			bool batSW = gpio_get_level(BATSW);
 			i2c.set_batSW(batSW);
+		}
+
+		auto now = std::chrono::high_resolution_clock::now();
+        auto elapsed_time_estop0 = std::chrono::duration_cast<std::chrono::milliseconds>(now - estop0_start).count();
+		auto elapsed_time_estop1 = std::chrono::duration_cast<std::chrono::milliseconds>(now - estop1_start).count();
+        
+        if (elapsed_time_estop0 > 120) {
+			printf("ESTOP0 TRIGGERED\n");
+            ESTOP0_triggered = true;
+        }
+		if (elapsed_time_estop1 > 120) {
+			printf("ESTOP1 TRIGGERED\n");
+			ESTOP1_triggered = true;
+		}
+
+		if(ESTOP0_triggered && ESTOP1_triggered) {
+			printf("EMERGENCY STOP\n");
 		}
 	}
 }
