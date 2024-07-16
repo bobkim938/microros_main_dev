@@ -100,8 +100,6 @@ void set_bms(uint16_t dOut);
 void read_DI();
 void remap_DI(uint8_t di0_data, uint8_t di1_data);
 void reset_gpio();
-void set_intr();
-void handle_interrupt(void* param);
 
 
 extern "C" void app_main(void) {
