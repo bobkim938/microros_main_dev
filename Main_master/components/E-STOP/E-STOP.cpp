@@ -31,7 +31,7 @@ ESTOP::ESTOP() {
 
 void ESTOP::begin() {
     ESP_ERROR_CHECK(ledc_timer_config(&ESTOP0_timer));
-    ets_delay_us(232);
+    vTaskDelay(pdMS_TO_TICKS(50));
     ESP_ERROR_CHECK(ledc_timer_config(&ESTOP1_timer));
 
     ESP_ERROR_CHECK(ledc_channel_config(&ESTOP0_channel));

@@ -653,6 +653,13 @@
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/DI_DO_SPI/CMakeFiles/install.dir
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/DI_DO_SPI/CMakeFiles/install/local.dir
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/DI_DO_SPI/CMakeFiles/install/strip.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/ESTOP/CMakeFiles/__idf_ESTOP.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/ESTOP/CMakeFiles/edit_cache.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/ESTOP/CMakeFiles/rebuild_cache.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/ESTOP/CMakeFiles/list_install_components.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/ESTOP/CMakeFiles/install.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/ESTOP/CMakeFiles/install/local.dir
+/Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/ESTOP/CMakeFiles/install/strip.dir
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/i2c_slave/CMakeFiles/__idf_i2c_slave.dir
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/i2c_slave/CMakeFiles/edit_cache.dir
 /Users/kimminjoong/Desktop/Project/HKTV_AGV/MAIN_DEV/Main_slave/build/esp-idf/i2c_slave/CMakeFiles/rebuild_cache.dir

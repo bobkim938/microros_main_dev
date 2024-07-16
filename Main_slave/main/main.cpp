@@ -1,6 +1,12 @@
 #include "DI_DO_SPI.h"
 #include <iostream>
 #include "i2c_slave.h"
+#include <stdlib.h>
+#include <inttypes.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/queue.h"
+#include "driver/gpio.h"
 
 # define DO0 GPIO_NUM_35 // 1
 # define DO1 GPIO_NUM_36 // 2
@@ -25,8 +31,12 @@
 # define DI15 GPIO_NUM_6
 # define DI16 GPIO_NUM_7
 # define DI18 GPIO_NUM_19
+#define GPIO_INPUT_PIN_SEL  ((1ULL<<DI0) | (1ULL<<DI1))
+#define ESP_INTR_FLAG_DEFAULT 0
 
 # define BATSW GPIO_NUM_47
+
+static QueueHandle_t gpio_evt_queue = NULL;
 
 i2c_slave_config i2c_conf = {
     .sda = GPIO_NUM_15, 
@@ -50,6 +60,22 @@ DI_DO_SPI_config DD_spi_config_1 = {
 	.bus_init = true,
 };
 
+static void IRAM_ATTR gpio_isr_handler(void* arg)
+{
+    uint32_t gpio_num = (uint32_t) arg;
+    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+}
+
+static void gpio_task_example(void* arg)
+{
+    uint32_t io_num;
+    for (;;) {
+        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+            printf("GPIO[%"PRIu32"] intr, val: %d\n", io_num, gpio_get_level((gpio_num_t)io_num));
+        }
+    }
+}
+
 bool ESPdi[8] = {};
 uint8_t current_DI[3] = {}; // index 0 (MSB) -> index 2 (LSB)
 
@@ -58,54 +84,42 @@ void set_bms(uint16_t dOut);
 void read_DI();
 void remap_DI(uint8_t di0_data, uint8_t di1_data);
 void reset_gpio();
+void set_intr();
+void handle_interrupt(void* param);
+
 
 extern "C" void app_main(void) {
 	reset_gpio();
+	gpio_config_t io_conf = {};
+    //interrupt of rising edge
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+    //bit mask of the pins, use GPIO4/5 here
+    io_conf.pin_bit_mask = GPIO_INPUT_PIN_SEL;
+    //set as input mode
+    io_conf.mode = GPIO_MODE_INPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
+    gpio_config(&io_conf);
 
-	gpio_set_direction(DO0, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO1, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO2, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO3, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO4, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO5, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO6, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO7, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO8, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO9, GPIO_MODE_OUTPUT);
-	gpio_set_direction(BMS, GPIO_MODE_OUTPUT);
-	gpio_set_direction(PASS1, GPIO_MODE_OUTPUT);
-	gpio_set_direction(PASS2, GPIO_MODE_OUTPUT);
+    //create a queue to handle gpio event from isr
+    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    //start gpio task
+    xTaskCreate(gpio_task_example, "gpio_task_example", 2048, NULL, 10, NULL);
 
-	gpio_set_direction(DI0, GPIO_MODE_INPUT);
-	gpio_set_direction(DI1, GPIO_MODE_INPUT);
-	gpio_set_direction(DI12, GPIO_MODE_INPUT);
-	gpio_set_direction(DI13, GPIO_MODE_INPUT);
-	gpio_set_direction(DI14, GPIO_MODE_INPUT);
-	gpio_set_direction(DI15, GPIO_MODE_INPUT);
-	gpio_set_direction(DI16, GPIO_MODE_INPUT);
-	gpio_set_direction(DI18, GPIO_MODE_INPUT);
-	gpio_set_direction(BATSW, GPIO_MODE_INPUT);
+    //install gpio isr service
+    gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
+    //hook isr handler for specific gpio pin
+    gpio_isr_handler_add(DI0, gpio_isr_handler, (void*) DI0);
+    //hook isr handler for specific gpio pin
+    gpio_isr_handler_add(DI1, gpio_isr_handler, (void*) DI1);
 
-	// gpio_reset_pin(GPIO_NUM_48);
-	// gpio_reset_pin(GPIO_NUM_21);
-	// gpio_set_direction(GPIO_NUM_48, GPIO_MODE_OUTPUT);
-	// gpio_set_direction(GPIO_NUM_21, GPIO_MODE_OUTPUT);
-	// while(1) {
-	// 	gpio_set_level(GPIO_NUM_48, 1);
-	// 	gpio_set_level(GPIO_NUM_21, 1);
-	// 	vTaskDelay(1000 / portTICK_PERIOD_MS);
-	// 	gpio_set_level(GPIO_NUM_48, 0);
-	// 	gpio_set_level(GPIO_NUM_21, 0);
-	// 	vTaskDelay(1000 / portTICK_PERIOD_MS);
-	// }
-	// gpio_set_level(GPIO_NUM_48, 1);
-	// gpio_set_level(GPIO_NUM_21, 1);
 
 	i2c_slave i2c(&i2c_conf);
 	DI_DO_SPI di0(&DD_spi_config_0);
 	DI_DO_SPI di1(&DD_spi_config_1);
 	di0.begin();
 	di1.begin();
+
 	while(1) {
 		uint16_t dOut = i2c.i2c_read();
 		if(i2c.get_di() == true) {
@@ -239,4 +253,28 @@ void reset_gpio() {
 	// gpio_reset_pin(DI16);
 	// gpio_reset_pin(DI18);
 	// gpio_reset_pin(BATSW);
+
+	gpio_set_direction(DO0, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DO1, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DO2, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DO3, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DO4, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DO5, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DO6, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DO7, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DO8, GPIO_MODE_OUTPUT);
+	gpio_set_direction(DO9, GPIO_MODE_OUTPUT);
+	gpio_set_direction(BMS, GPIO_MODE_OUTPUT);
+	gpio_set_direction(PASS1, GPIO_MODE_OUTPUT);
+	gpio_set_direction(PASS2, GPIO_MODE_OUTPUT);
+
+	// gpio_set_direction(DI0, GPIO_MODE_INPUT);
+	// gpio_set_direction(DI1, GPIO_MODE_INPUT);
+	gpio_set_direction(DI12, GPIO_MODE_INPUT);
+	gpio_set_direction(DI13, GPIO_MODE_INPUT);
+	gpio_set_direction(DI14, GPIO_MODE_INPUT);
+	gpio_set_direction(DI15, GPIO_MODE_INPUT);
+	gpio_set_direction(DI16, GPIO_MODE_INPUT);
+	gpio_set_direction(DI18, GPIO_MODE_INPUT);
+	gpio_set_direction(BATSW, GPIO_MODE_INPUT);
 }

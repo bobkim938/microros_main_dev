@@ -2,7 +2,8 @@
 #include "esp_err.h"
 #include "driver/gpio.h"
 #include "math.h"
-#include <rom/ets_sys.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #define PWM1 GPIO_NUM_2
 #define PWM2 GPIO_NUM_1
@@ -13,7 +14,7 @@
 #define PWM_CHANNEL_0 LEDC_CHANNEL_0
 #define PWM_CHANNEL_1 LEDC_CHANNEL_1
 #define PWM_DUTY_RES LEDC_TIMER_13_BIT // set duty resolution to 13 bits
-#define PWM_FREQUENCY (2000) // 2 kHz
+#define PWM_FREQUENCY (10)
 
 class ESTOP {
     public:
