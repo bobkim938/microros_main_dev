@@ -113,7 +113,7 @@ extern "C" void app_main(void) {
     gpio_config(&io_conf);
 
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-    xTaskCreate(estop_task, "gpio_task_example", 2048, NULL, 10, NULL);
+    xTaskCreate(estop_task, "ESTOP TRIGGER", 2048, NULL, 10, NULL);
 
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
     gpio_isr_handler_add(DI0, gpio_isr_handler, (void*) DI0);
@@ -153,11 +153,11 @@ extern "C" void app_main(void) {
         auto elapsed_time_estop0 = std::chrono::duration_cast<std::chrono::milliseconds>(now - estop0_start).count();
 		auto elapsed_time_estop1 = std::chrono::duration_cast<std::chrono::milliseconds>(now - estop1_start).count();
         
-        if (elapsed_time_estop0 > 120) {
+        if (elapsed_time_estop0 > 110) {
 			printf("ESTOP0 TRIGGERED\n");
             ESTOP0_triggered = true;
         }
-		if (elapsed_time_estop1 > 120) {
+		if (elapsed_time_estop1 > 110) {
 			printf("ESTOP1 TRIGGERED\n");
 			ESTOP1_triggered = true;
 		}
