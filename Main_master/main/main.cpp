@@ -239,7 +239,7 @@ extern "C" void app_main(void)
         // di_data.data = i2c.read_di();
         // i2c.check_BATSW();
         // i2c.cntrl_BMSpass(0x01);
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
     // DK42688_SPI IMU(&IMU_spi_config);
     // IC_SPI ic_left(&IC_left);
