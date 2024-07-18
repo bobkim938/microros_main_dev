@@ -97,15 +97,6 @@ static void estop_task(void* arg)
 				estop1_start = std::chrono::high_resolution_clock::now();
 				ESTOP1_triggered = false;
 			}
-			if (io_num == BATSW) {
-				if(!batSW) {
-					batSW = true;
-				}
-				else if(batSW) {
-					batSW_shutDown = std::chrono::high_resolution_clock::now();
-					batSW_shutDown_flag = true;
-				}
-			}
         }
     }
 }
@@ -115,7 +106,6 @@ static void batsw_task(void* arg)
     uint32_t io_num;
     for (;;) {
         if (xQueueReceive(batsw_evt_queue, &io_num, portMAX_DELAY)) {
-
 			if (io_num == BATSW) {
 				if(!batSW) {
 					batSW = true;
