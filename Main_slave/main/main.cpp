@@ -37,7 +37,8 @@
 #define GPIO_INPUT_PIN_SEL  ((1ULL<<DI0) | (1ULL<<DI1) | (1ULL<<BATSW))
 #define ESP_INTR_FLAG_DEFAULT 0
 
-static QueueHandle_t gpio_evt_queue = NULL;
+static QueueHandle_t estop_evt_queue = NULL;
+static QueueHandle_t batsw_evt_queue = NULL;
 
 auto estop0_start = std::chrono::high_resolution_clock::now();
 auto estop1_start = std::chrono::high_resolution_clock::now();
@@ -46,6 +47,7 @@ bool ESTOP0_triggered = false;
 bool ESTOP1_triggered = false;
 
 bool batSW = false;
+bool batSW_shutDown_flag = false;
 uint8_t batSW_onCnt = 0;
 
 i2c_slave_config i2c_conf = {
@@ -72,21 +74,20 @@ DI_DO_SPI_config DD_spi_config_1 = {
 
 static void IRAM_ATTR estop_isr_handler(void* arg) {
     uint32_t gpio_num = (uint32_t) arg;
-    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+    xQueueSendFromISR(estop_evt_queue, &gpio_num, NULL);
 }
 
-// static void IRAM_ATTR batsw_isr_handler(void* arg) {
-//     uint32_t gpio_num = (uint32_t) arg;
-// 	batSW = true;
-//     xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
-// }
+static void IRAM_ATTR batsw_isr_handler(void* arg) {
+    uint32_t gpio_num = (uint32_t) arg;
+    xQueueSendFromISR(batsw_evt_queue, &gpio_num, NULL);
+}
 
 
 static void estop_task(void* arg)
 {
     uint32_t io_num;
     for (;;) {
-        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+        if (xQueueReceive(estop_evt_queue, &io_num, portMAX_DELAY)) {
             // printf("GPIO[%"PRIu32"] intr, val: %d\n", io_num, gpio_get_level((gpio_num_t)io_num));
 			if (io_num == DI0) {
 				estop0_start = std::chrono::high_resolution_clock::now();
@@ -98,36 +99,33 @@ static void estop_task(void* arg)
 			}
 			if (io_num == BATSW) {
 				if(!batSW) {
-					if(gpio_get_level((gpio_num_t)io_num) == 1) {
-						// printf("BATSW ON RISING EDGE\n");
-					}
-					else if(gpio_get_level((gpio_num_t)io_num) == 0) {
-						// printf("BATSW ON FALLING EDGE\n");
-						batSW_onCnt = 0;
-						batSW = true;
-						// printf("BATSW ON\n");
-					}
-					else {
-						batSW_onCnt = 0;
-					}
+					batSW = true;
 				}
 				else if(batSW) {
-					if(gpio_get_level((gpio_num_t)io_num) == 1) {
-						// printf("BATSW OFF RISING EDGE\n");
-						batSW_shutDown = std::chrono::high_resolution_clock::now();
-					}
-					else if(gpio_get_level((gpio_num_t)io_num) == 0) {
-						// printf("BATSW OFF FALLING EDGE\n");
-						auto now = std::chrono::high_resolution_clock::now();
-						auto elapsed_time_batSW = std::chrono::duration_cast<std::chrono::milliseconds>(now - batSW_shutDown).count();
-						if(elapsed_time_batSW > 2000) {
-							batSW = false;
-							// printf("BATSW OFF\n");
-						}
-					}
+					batSW_shutDown = std::chrono::high_resolution_clock::now();
+					batSW_shutDown_flag = true;
 				}
 			}
         }
+    }
+}
+
+static void batsw_task(void* arg)
+{
+    uint32_t io_num;
+    for (;;) {
+        if (xQueueReceive(batsw_evt_queue, &io_num, portMAX_DELAY)) {
+
+			if (io_num == BATSW) {
+				if(!batSW) {
+					batSW = true;
+				}
+				else if(batSW) {
+					batSW_shutDown = std::chrono::high_resolution_clock::now();
+					batSW_shutDown_flag = true;
+				}
+			}
+		}
     }
 }
 
@@ -151,15 +149,15 @@ extern "C" void app_main(void) {
     io_conf.pull_up_en = GPIO_PULLUP_ENABLE;
     gpio_config(&io_conf);
 
-	gpio_set_intr_type(BATSW, GPIO_INTR_ANYEDGE);
-
-    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    estop_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+	batsw_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     xTaskCreate(estop_task, "ESTOP TRIGGER", 2048, NULL, 10, NULL);
+	xTaskCreate(batsw_task, "BATSW TRIGGER", 2048, NULL, 10, NULL);
 
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
     gpio_isr_handler_add(DI0, estop_isr_handler, (void*) DI0);
     gpio_isr_handler_add(DI1, estop_isr_handler, (void*) DI1);
-	gpio_isr_handler_add(BATSW, estop_isr_handler, (void*) BATSW);
+	gpio_isr_handler_add(BATSW, batsw_isr_handler, (void*) BATSW);
 	
 	i2c_slave i2c(&i2c_conf);
 	DI_DO_SPI di0(&DD_spi_config_0);
@@ -193,6 +191,14 @@ extern "C" void app_main(void) {
 		auto now = std::chrono::high_resolution_clock::now();
         auto elapsed_time_estop0 = std::chrono::duration_cast<std::chrono::milliseconds>(now - estop0_start).count();
 		auto elapsed_time_estop1 = std::chrono::duration_cast<std::chrono::milliseconds>(now - estop1_start).count();
+
+		if(batSW_shutDown_flag && gpio_get_level(BATSW) == 1) {
+			auto elapsed_time_batSW = std::chrono::duration_cast<std::chrono::milliseconds>(now - batSW_shutDown).count();
+			if(elapsed_time_batSW > 2000) {
+				batSW = false;
+				batSW_shutDown_flag = false;
+			}
+		}
         
         if (elapsed_time_estop0 > 110) {
 			printf("ESTOP0 TRIGGERED\n");
