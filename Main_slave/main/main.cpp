@@ -48,7 +48,6 @@ bool ESTOP1_triggered = false;
 
 bool batSW = false;
 bool batSW_shutDown_flag = false;
-uint8_t batSW_onCnt = 0;
 
 i2c_slave_config i2c_conf = {
     .sda = GPIO_NUM_15, 
@@ -82,9 +81,7 @@ static void IRAM_ATTR batsw_isr_handler(void* arg) {
     xQueueSendFromISR(batsw_evt_queue, &gpio_num, NULL);
 }
 
-
-static void estop_task(void* arg)
-{
+static void estop_task(void* arg) {
     uint32_t io_num;
     for (;;) {
         if (xQueueReceive(estop_evt_queue, &io_num, portMAX_DELAY)) {
@@ -101,8 +98,7 @@ static void estop_task(void* arg)
     }
 }
 
-static void batsw_task(void* arg)
-{
+static void batsw_task(void* arg) {
     uint32_t io_num;
     for (;;) {
         if (xQueueReceive(batsw_evt_queue, &io_num, portMAX_DELAY)) {
@@ -188,6 +184,9 @@ extern "C" void app_main(void) {
 				batSW = false;
 				batSW_shutDown_flag = false;
 			}
+		}
+		else {
+			batSW_shutDown_flag = false;
 		}
         
         if (elapsed_time_estop0 > 110) {
