@@ -43,11 +43,11 @@ static QueueHandle_t batsw_evt_queue = NULL;
 auto estop0_start = std::chrono::high_resolution_clock::now();
 auto estop1_start = std::chrono::high_resolution_clock::now();
 auto batSW_shutDown = std::chrono::high_resolution_clock::now();
-bool ESTOP0_triggered = false;
-bool ESTOP1_triggered = false;
+volatile bool ESTOP0_triggered = false;
+volatile bool ESTOP1_triggered = false;
 
-bool batSW = false;
-bool batSW_shutDown_flag = false;
+volatile bool batSW = false;
+volatile bool batSW_shutDown_flag = false;
 
 i2c_slave_config i2c_conf = {
     .sda = GPIO_NUM_15, 
@@ -170,8 +170,8 @@ extern "C" void app_main(void) {
 			set_bms(dOut);
 		}
 		if(i2c.get_batSW() == true) {
-			bool batSW = gpio_get_level(BATSW);
-			i2c.set_batSW(batSW);
+			bool bat_sw = gpio_get_level(BATSW);
+			i2c.set_batSW(bat_sw);
 		}
 
 		auto now = std::chrono::high_resolution_clock::now();
@@ -199,7 +199,11 @@ extern "C" void app_main(void) {
 		}
 
 		if(ESTOP0_triggered && ESTOP1_triggered) {
+			// current_DI[0] = 0x01;
 			printf("EMERGENCY STOP\n");
+		}
+		else {
+			// current_DI[0] = 0x00;
 		}
 		if(batSW) {
 			printf("BATSW ON\n");
