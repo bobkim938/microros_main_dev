@@ -1,4 +1,5 @@
 idf_component_register(
-    SRCS main.cpp
+    SRCS dmx_485.cpp 
     INCLUDE_DIRS .
+    REQUIRES driver 
 )

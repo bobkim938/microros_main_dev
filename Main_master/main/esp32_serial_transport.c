@@ -9,13 +9,13 @@
 #define UART_CTS  (CONFIG_MICROROS_UART_CTS)
 
 // --- micro-ROS Transports ---
-#define UART_BUFFER_SIZE (512)
+#define UART_BUFFER_SIZE (512) //512
 
 bool esp32_serial_open(struct uxrCustomTransport * transport){
     size_t * uart_port = (size_t*) transport->args;
 
     uart_config_t uart_config = {
-        .baud_rate = 1500000,
+        .baud_rate = 921600,
         .data_bits = UART_DATA_8_BITS,
         .parity    = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
@@ -29,6 +29,8 @@ bool esp32_serial_open(struct uxrCustomTransport * transport){
         return false;
     }
     if (uart_driver_install(*uart_port, UART_BUFFER_SIZE * 2, 0, 0, NULL, 0) == ESP_FAIL) {
+    //QueueHandle_t uart_queue;
+    //if (uart_driver_install(*uart_port, UART_BUFFER_SIZE * 2, UART_BUFFER_SIZE * 2, 10, &uart_queue, 0) == ESP_FAIL) {        
         return false;
     }
 

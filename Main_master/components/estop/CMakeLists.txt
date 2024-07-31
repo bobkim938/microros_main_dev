@@ -1,4 +1,5 @@
 idf_component_register(
-    SRCS main.cpp
+    SRCS estop.cpp 
     INCLUDE_DIRS .
+    REQUIRES driver
 )

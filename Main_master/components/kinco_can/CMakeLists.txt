@@ -1,4 +1,5 @@
 idf_component_register(
-    SRCS main.cpp
+    SRCS kinco_can.c 
     INCLUDE_DIRS .
+    REQUIRES driver
 )
