@@ -60,8 +60,11 @@
 //bool batSW_shutDown_flag = false;
 int32_t registry_di, registry_do;
 int8_t registry_amr_state, registry_bms_level;
-uint32_t BMS_percentage = 0;
+uint8_t BMS_percentage = 0;
 uint16_t current_NavState = 0;
+
+uint16_t dOut = 0x0000;
+bool new_DO = false;
 
 i2c_slave_config i2c_conf = {
 	.sda = I2C_SDA, 
@@ -139,27 +142,34 @@ bool ESPdi[8] = {};
 uint8_t current_state[6] = {}; // index 0 (MSB) -> index 2 (LSB)
 uint8_t di0_data, di1_data;
 
-void set_dOut(uint16_t dOut) {
-	bool d0 = dOut & 0x0001;
-	bool d1 = dOut & 0x0002;
-	bool d2 = dOut & 0x0004;
-	bool d3 = dOut & 0x0008;
-	bool d4 = dOut & 0x0010;
-	bool d5 = dOut & 0x0020;
-	bool d6 = dOut & 0x0040;
-	bool d7 = dOut & 0x0080;
-	bool d8 = dOut & 0x0100;
-	bool d9 = dOut & 0x0200;
-	gpio_set_level(DO_0, d0);
-	gpio_set_level(DO_1, d1);
-	gpio_set_level(DO_2, d2);
-	gpio_set_level(DO_3, d3);
-	gpio_set_level(DO_4, d4);
-	gpio_set_level(DO_5, d5);
-	gpio_set_level(DO_6, d6);
-	gpio_set_level(DO_7, d7);
-	gpio_set_level(DO_8, d8);
-	gpio_set_level(DO_9, d9);
+void set_dOut(void* arg) {
+	while(1) {
+		if(new_DO) {
+			bool d0 = dOut & 0x0001;
+			bool d1 = dOut & 0x0002;
+			bool d2 = dOut & 0x0004;
+			bool d3 = dOut & 0x0008;
+			bool d4 = dOut & 0x0010;
+			bool d5 = dOut & 0x0020;
+			bool d6 = dOut & 0x0040;
+			bool d7 = dOut & 0x0080;
+			bool d8 = dOut & 0x0100;
+			bool d9 = dOut & 0x0200;
+			gpio_set_level(DO_0, d0);
+			gpio_set_level(DO_1, d1);
+			gpio_set_level(DO_2, d2);
+			gpio_set_level(DO_3, d3);
+			gpio_set_level(DO_4, d4);
+			gpio_set_level(DO_5, d5);
+			gpio_set_level(DO_6, d6);
+			gpio_set_level(DO_7, d7);
+			gpio_set_level(DO_8, d8);
+			gpio_set_level(DO_9, d9);
+			new_DO = false;
+		}
+		vTaskDelay(pdMS_TO_TICKS(1));
+	}
+	vTaskDelete(NULL);
 }
 
 void readMap_DO_DI(void* arg) {
@@ -279,15 +289,14 @@ void i2c_task(void* arg) {
 		if(my_i2c.get_state() == true) {
 			my_i2c.set_state(current_state);
 		}
-		else if(my_i2c.get_do() == true) {
-			uint16_t dOut = my_i2c.return_DO();
-			set_dOut(dOut);
+		if(my_i2c.get_do() == true) {
+			dOut = my_i2c.return_DO();
+			new_DO = true;
 			current_NavState = my_i2c.return_NavState();
-			printf("current DO State: 0x%04X\n",dOut);
-			printf("current Nav State: 0x%04X\n",current_NavState);
-		}
-		else if(my_i2c.get_bms() == true) {
 			BMS_percentage = my_i2c.return_BMS();
+			ESP_LOGI("I2C", "current DO State: 0x%04X\n",dOut);
+			ESP_LOGI("I2C", "current Nav State: 0x%04X\n",current_NavState);
+			ESP_LOGI("I2C", "Battery Percentage: %u\n", BMS_percentage);
 		}
 	}
 	vTaskDelete(NULL);
@@ -309,6 +318,7 @@ extern "C" void app_main(void) {
 //	xTaskCreate(rs485_task, "rs485_task", 16000, NULL, 1, NULL);
 	xTaskCreate(readMap_DO_DI, "readMap_state", 16000, NULL, 5, NULL);
 	xTaskCreate(i2c_task, "i2c_task", 16000, NULL, 5, NULL);
+	xTaskCreatePinnedToCore(set_dOut, "set_dOut", 16000, NULL, 5, NULL, 1);
 
 // 	while(1) {
 // 		uint16_t dOut = my_i2c.i2c_read();

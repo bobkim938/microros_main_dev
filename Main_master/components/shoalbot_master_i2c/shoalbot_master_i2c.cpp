@@ -62,6 +62,12 @@ esp_err_t shoalbot_master_i2c::i2c_send_DO(uint8_t* data) { // first byte 0xBB f
         //ESP_LOGE(TAG, "Failed to transmit data");
         return ret;
     }
+    vTaskDelay(1);
+    ret = i2c_master_transmit(i2c_master_handle, data + 5, 1, 10);
+    if(ret != ESP_OK) {
+        //ESP_LOGE(TAG, "Failed to transmit data");
+        return ret;
+    }
     // printf("sending DO\n");
     return ret;
 }
@@ -85,45 +91,45 @@ uint32_t shoalbot_master_i2c::read_state() {
     return DI_fromSlave;
 }
 
-esp_err_t shoalbot_master_i2c::write_BMS(uint32_t data) { 
-    // Bit 0: BMS, Bit 1: Pass1, Bit 2: Pass2
-    uint8_t percentage[5] = {};
-    percentage[0] = 0xCC;
-    percentage[1] = (data >> 24) & 0xFF; // highest byte (MSB)
-    percentage[2] = (data >> 16) & 0xFF; // second highest byte
-    percentage[3] = (data >> 8) & 0xFF;  // second lowest byte
-    percentage[4] = data & 0xFF;         // lowest byte (LSB)
-    ret = i2c_master_transmit(i2c_master_handle, percentage, 1, 10);
-        if(ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to transmit data");
-            return ret;
-        }
-    vTaskDelay(1);
-    ret = i2c_master_transmit(i2c_master_handle, percentage + 1, 1, 10);
-        if(ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to transmit data");
-            return ret;
-        }
-    vTaskDelay(1);
-    ret = i2c_master_transmit(i2c_master_handle, percentage + 2, 1, 10);
-        if(ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to transmit data");
-            return ret;
-        }
-    vTaskDelay(1);
-    ret = i2c_master_transmit(i2c_master_handle, percentage + 3, 1, 10);
-        if(ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to transmit data");
-            return ret;
-        }
-    vTaskDelay(1);
-    ret = i2c_master_transmit(i2c_master_handle, percentage + 4, 1, 10);
-        if(ret != ESP_OK) {
-            ESP_LOGE(TAG, "Failed to transmit data");
-            return ret;
-        }
-    return ret;
-}
+// esp_err_t shoalbot_master_i2c::write_BMS(uint32_t data) { 
+//     // Bit 0: BMS, Bit 1: Pass1, Bit 2: Pass2
+//     uint8_t percentage[5] = {};
+//     percentage[0] = 0xCC;
+//     percentage[1] = (data >> 24) & 0xFF; // highest byte (MSB)
+//     percentage[2] = (data >> 16) & 0xFF; // second highest byte
+//     percentage[3] = (data >> 8) & 0xFF;  // second lowest byte
+//     percentage[4] = data & 0xFF;         // lowest byte (LSB)
+//     ret = i2c_master_transmit(i2c_master_handle, percentage, 1, 10);
+//         if(ret != ESP_OK) {
+//             ESP_LOGE(TAG, "Failed to transmit data");
+//             return ret;
+//         }
+//     vTaskDelay(1);
+//     ret = i2c_master_transmit(i2c_master_handle, percentage + 1, 1, 10);
+//         if(ret != ESP_OK) {
+//             ESP_LOGE(TAG, "Failed to transmit data");
+//             return ret;
+//         }
+//     vTaskDelay(1);
+//     ret = i2c_master_transmit(i2c_master_handle, percentage + 2, 1, 10);
+//         if(ret != ESP_OK) {
+//             ESP_LOGE(TAG, "Failed to transmit data");
+//             return ret;
+//         }
+//     vTaskDelay(1);
+//     ret = i2c_master_transmit(i2c_master_handle, percentage + 3, 1, 10);
+//         if(ret != ESP_OK) {
+//             ESP_LOGE(TAG, "Failed to transmit data");
+//             return ret;
+//         }
+//     vTaskDelay(1);
+//     ret = i2c_master_transmit(i2c_master_handle, percentage + 4, 1, 10);
+//         if(ret != ESP_OK) {
+//             ESP_LOGE(TAG, "Failed to transmit data");
+//             return ret;
+//         }
+//     return ret;
+// }
 /*
 bool shoalbot_master_i2c::check_BATSW() {
     ret = i2c_master_transmit_receive(i2c_master_handle, batSW_cmd, sizeof(batSW_cmd), &batSW, 1, -1);

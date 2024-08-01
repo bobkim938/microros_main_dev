@@ -30,12 +30,11 @@ class shoalbot_slave_i2c {
         esp_err_t i2c_send_state(uint8_t* data, uint8_t index);
         bool get_state();
         bool get_do();
-        bool get_bms();
-        uint32_t return_BMS();
         uint16_t return_NavState();
         uint16_t return_DO();
-//        bool get_batSW();
+        uint8_t return_BMS();
         void set_state(uint8_t* state_data);
+//        bool get_batSW();
 //        void set_batSW(bool batsw);
  
     private:
@@ -43,15 +42,14 @@ class shoalbot_slave_i2c {
         i2c_slave_dev_handle_t slv_handle;
         i2c_slave_event_callbacks_t cbs;
         i2c_slave_rx_done_event_data_t rx_data;
-        esp_err_t ret;
+        esp_err_t ret;  
+        SemaphoreHandle_t i2c_mutex = xSemaphoreCreateBinary();
 
         uint8_t DO_cnt = 0;
         uint16_t parsed_data_DO = 0;
         uint16_t parsed_data_NavState = 0;
 
-        uint8_t BMS_cnt = 0;
-        uint32_t parsed_data_BMS = 0;
-        uint32_t current_BMS = 0;
+        uint8_t parsed_data_BMS = 0;
 
         uint8_t current_State[5] = {};
 
@@ -59,10 +57,8 @@ class shoalbot_slave_i2c {
 
         bool DO_ack_flag = false;
         bool State_ack_flag = false;
-        bool BMS_ack_flag = false;
         bool batSW_ack_flag = false;
 
-        bool new_BMS = false;
         bool new_State = false;
         bool new_DO = false;
         bool new_batSW = false;

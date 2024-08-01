@@ -157,7 +157,7 @@ shoalbot_master_i2c my_i2c(&i2c_config);
 int32_t di_buffer;
 bool new_DO = false;
 bool new_DI = false;
-uint8_t slave_do[5] = {0xBB, 0x00, 0x0B, 0x01, 0x00}; // first byte to indicating DO cmd, second bit 2 MSB
+uint8_t slave_do[6] = {0xBB, 0x00, 0x0B, 0x01, 0x00, 0x00}; // first byte to indicating DO cmd, second bit 2 MSB
 uint16_t master_do = 0;
 uint32_t bat_percentage = 0;
 
@@ -600,17 +600,16 @@ void i2c_task(void *arg) { // I2C master task
 	// slave_do[2] = {DO7, DO6, DO5, DO4, DO3, DO2, DO1, DO0} LSB PART OF SLAVE DO
 	// slave_do[3] = {0, 0, 0, 0, 0, 0, 0, nav_st9, nav_st8} MSB PART OF NAV STATUS
 	// slave_do[4] = {nav_st7, nav_st6, nav_st5, nav_st4, nav_st3, nav_st2, nav_st1, nav_st0} LSB PART OF NAV STATUS
+	// slave_do[5] = BMS PERCENTAGE
 
 	float a = 97.3;
-	uint32_t b = (uint32_t)a;
-	uint8_t i2c_cnt = 0;
+	slave_do[5] = (uint8_t) a;
+
 	while (1) {
 		di_buffer = my_i2c.read_state();
-		vTaskDelay(pdMS_TO_TICKS(70));
-		my_i2c.write_BMS(b);
-		vTaskDelay(pdMS_TO_TICKS(50));
+		vTaskDelay(pdMS_TO_TICKS(100));
 		my_i2c.i2c_send_DO(slave_do);
-		vTaskDelay(pdMS_TO_TICKS(50));
+		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 	vTaskDelete(NULL);
 }
