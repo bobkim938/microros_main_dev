@@ -26,13 +26,16 @@ static IRAM_ATTR bool i2c_slave_rx_done_callback(i2c_slave_dev_handle_t channel,
 class shoalbot_slave_i2c {
     public:
         shoalbot_slave_i2c(i2c_slave_config* slave_config);
-        uint16_t i2c_read(); // read DO cmd from master
-        esp_err_t i2c_send_DI(uint8_t* data, uint8_t index);
-        bool get_di();
+        esp_err_t i2c_read(); // read DO cmd from master
+        esp_err_t i2c_send_state(uint8_t* data, uint8_t index);
+        bool get_state();
         bool get_do();
-//        bool get_bms();
+        bool get_bms();
+        uint32_t return_BMS();
+        uint16_t return_NavState();
+        uint16_t return_DO();
 //        bool get_batSW();
-        void set_di(uint8_t* di_data);
+        void set_state(uint8_t* state_data);
 //        void set_batSW(bool batsw);
  
     private:
@@ -44,18 +47,23 @@ class shoalbot_slave_i2c {
 
         uint8_t DO_cnt = 0;
         uint16_t parsed_data_DO = 0;
+        uint16_t parsed_data_NavState = 0;
 
-        uint8_t current_DI[3] = {};
+        uint8_t BMS_cnt = 0;
+        uint32_t parsed_data_BMS = 0;
+        uint32_t current_BMS = 0;
+
+        uint8_t current_State[5] = {};
 
         uint8_t batSW = 0;
 
         bool DO_ack_flag = false;
-        bool DI_ack_flag = false;
+        bool State_ack_flag = false;
         bool BMS_ack_flag = false;
         bool batSW_ack_flag = false;
 
         bool new_BMS = false;
-        bool new_DI = false;
+        bool new_State = false;
         bool new_DO = false;
         bool new_batSW = false;
 };
