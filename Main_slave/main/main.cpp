@@ -5,10 +5,12 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "driver/gpio.h"
+#include "driver/pulse_cnt.h"
+#include "esp_sleep.h"
 //#include <chrono>
 #include "dido_spi.h"
 #include "shoalbot_slave_i2c.h"
-#include "dmx_485.h"
+//#include "dmx_485.h"
 
 #define JETSON_24 GPIO_NUM_0
 #define DI_1 GPIO_NUM_1
@@ -43,6 +45,22 @@
 #define DO_5 GPIO_NUM_46	// 32
 #define BOOTKEY GPIO_NUM_47	
 #define BMS GPIO_NUM_48
+
+static const char *TAG = "example";
+int pulse_count = 0, prev_pulse_count;
+int8_t shoalbot_amr_state = 5;
+/* shoalbot_amr_state I will decide the state based on priority, then tell DMX
+1: ESTOP
+2: ERROR
+3: LOWBAT
+4: CHRGNG
+5: IDLE
+6: SHWBAT
+11: BLOCK
+12: LEFT
+13: RIGHT
+14: MOVE
+*/
 
 //#define GPIO_INPUT_PIN_SEL  ((1ULL<<DI_0) | (1ULL<<DI_1) | (1ULL<<BAT_SW))
 //#define ESP_INTR_FLAG_DEFAULT 0
@@ -89,7 +107,7 @@ DI_DO_SPI_config DD_spi_config_1 = {
 };
 DI_DO_SPI di1(&DD_spi_config_1);
 
-DMX::AMRState amr_state = DMX::AMRState::AMR_IDLE;
+//DMX::AMRState amr_state = DMX::AMRState::AMR_IDLE;
 
 /*
 static void IRAM_ATTR estop_isr_handler(void* arg) {
@@ -242,8 +260,8 @@ void reset_gpio() {
 	gpio_reset_pin(BMS);
 	gpio_reset_pin(PASS_1);
 	gpio_reset_pin(PASS_2);
-	gpio_reset_pin(DI_0);
-	gpio_reset_pin(DI_1);
+//	gpio_reset_pin(DI_0);
+//	gpio_reset_pin(DI_1);
 	gpio_reset_pin(DI_12);
 	gpio_reset_pin(DI_13);
 	gpio_reset_pin(DI_14);
@@ -264,8 +282,8 @@ void reset_gpio() {
 	gpio_set_direction(BMS, GPIO_MODE_OUTPUT);
 	gpio_set_direction(PASS_1, GPIO_MODE_OUTPUT);
 	gpio_set_direction(PASS_2, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DI_0, GPIO_MODE_INPUT);
-	gpio_set_direction(DI_1, GPIO_MODE_INPUT);
+//	gpio_set_direction(DI_0, GPIO_MODE_INPUT);
+//	gpio_set_direction(DI_1, GPIO_MODE_INPUT);
 	gpio_set_direction(DI_12, GPIO_MODE_INPUT);
 	gpio_set_direction(DI_13, GPIO_MODE_INPUT);
 	gpio_set_direction(DI_14, GPIO_MODE_INPUT);
@@ -275,7 +293,7 @@ void reset_gpio() {
 	gpio_set_direction(BOOTKEY, GPIO_MODE_INPUT);
 	gpio_set_pull_mode(BOOTKEY, GPIO_PULLUP_ONLY);
 }
-
+/*
 void rs485_task(void *arg) { // DMX task
 	while (1) {
 		DMX::SetAMRState(DMX::AMRState::AMR_ERROR, 33);;  // Update LED color based on amr_state.
@@ -283,7 +301,7 @@ void rs485_task(void *arg) { // DMX task
 	}
 	vTaskDelete(NULL);
 }
-
+*/
 void i2c_task(void* arg) {
 	while(1) {
 		my_i2c.i2c_read();
@@ -304,6 +322,40 @@ void i2c_task(void* arg) {
 }
 
 extern "C" void app_main(void) {
+
+    ESP_LOGI(TAG, "install pcnt unit");
+    pcnt_unit_config_t unit_config = {
+		.low_limit = -100,
+        .high_limit = 100,
+    };
+	pcnt_unit_handle_t pcnt_unit = NULL;
+    ESP_ERROR_CHECK(pcnt_new_unit(&unit_config, &pcnt_unit));
+	ESP_LOGI(TAG, "set glitch filter");
+    pcnt_glitch_filter_config_t filter_config = {
+        .max_glitch_ns = 1000,
+    };
+    ESP_ERROR_CHECK(pcnt_unit_set_glitch_filter(pcnt_unit, &filter_config));
+	ESP_LOGI(TAG, "install pcnt channels");
+    pcnt_chan_config_t chan_a_config = {
+        .edge_gpio_num = DI_0,
+    };
+	pcnt_channel_handle_t pcnt_chan_a = NULL;
+    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit, &chan_a_config, &pcnt_chan_a));
+    pcnt_chan_config_t chan_b_config = {
+        .edge_gpio_num = DI_1,
+    };
+	pcnt_channel_handle_t pcnt_chan_b = NULL;
+    ESP_ERROR_CHECK(pcnt_new_channel(pcnt_unit, &chan_b_config, &pcnt_chan_b));
+	ESP_LOGI(TAG, "set edge and level actions for pcnt channels");
+	ESP_ERROR_CHECK(pcnt_channel_set_edge_action(pcnt_chan_a, PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_INCREASE));
+	ESP_ERROR_CHECK(pcnt_channel_set_edge_action(pcnt_chan_b, PCNT_CHANNEL_EDGE_ACTION_INCREASE, PCNT_CHANNEL_EDGE_ACTION_INCREASE));
+    ESP_LOGI(TAG, "enable pcnt unit");
+    ESP_ERROR_CHECK(pcnt_unit_enable(pcnt_unit));
+    ESP_LOGI(TAG, "clear pcnt unit");
+    ESP_ERROR_CHECK(pcnt_unit_clear_count(pcnt_unit));
+    ESP_LOGI(TAG, "start pcnt unit");
+    ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit));
+
 	reset_gpio();
 	gpio_set_level(BMS, 1);
 	gpio_set_level(PASS_1, 1); // Kinco enable 
@@ -321,7 +373,27 @@ extern "C" void app_main(void) {
 	xTaskCreate(i2c_task, "i2c_task", 16000, NULL, 5, NULL);
 	xTaskCreatePinnedToCore(set_dOut, "set_dOut", 16000, NULL, 5, NULL, 1);
 
-// 	while(1) {
+ 	while(1) {
+		ESP_ERROR_CHECK(pcnt_unit_get_count(pcnt_unit, &pulse_count));
+        ESP_LOGI(TAG, "Pulse count: %d", pulse_count);
+
+		if ((pulse_count - prev_pulse_count) < 2) { // no new estop pulse is detected for the half cycle
+			ESP_LOGI(TAG, "ESTOP !");
+			shoalbot_amr_state = 1;
+			gpio_set_level(PASS_1, 0); 
+			gpio_set_level(PASS_2, 0); 
+		}
+		else {
+			shoalbot_amr_state = 5;
+			gpio_set_level(PASS_1, 1); 
+			gpio_set_level(PASS_2, 1); 
+		}
+		prev_pulse_count = pulse_count;
+		if (pulse_count>97) { // a high enough odd number
+			ESP_ERROR_CHECK(pcnt_unit_clear_count(pcnt_unit));
+			prev_pulse_count = 0;
+		}
+		vTaskDelay(pdMS_TO_TICKS(50));
 // 		uint16_t dOut = my_i2c.i2c_read();
 // 		if(my_i2c.get_di() == true) {
 // 			my_i2c.set_di(current_DI);
@@ -369,5 +441,5 @@ extern "C" void app_main(void) {
 // 			printf("BATSW OFF\n");
 // 		}
 // */
-// 	}
+ 	}
 }
