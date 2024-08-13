@@ -5,6 +5,8 @@
 #include "esp_log.h"
 #include "esp_attr.h"
 #include "freertos/FreeRTOS.h"
+#include <memory>
+
 
 typedef struct {
     gpio_num_t sda;
