@@ -205,16 +205,16 @@ void readMap_DO_DI(void* arg) {
 		di1_data = di1.read_di(); // printf("spi1: 0x%02X\n", di1_data);
 
 		// FOR DO
-		bool r_d0 = gpio_get_level(DO_0);
-		bool r_d1 = gpio_get_level(DO_1);
-		bool r_d2 = gpio_get_level(DO_2);
-		bool r_d3 = gpio_get_level(DO_3);
-		bool r_d4 = gpio_get_level(DO_4);
-		bool r_d5 = gpio_get_level(DO_5);
-		bool r_d6 = gpio_get_level(DO_6);
-		bool r_d7 = gpio_get_level(DO_7);
-		bool r_d8 = gpio_get_level(DO_8);
-		bool r_d9 = gpio_get_level(DO_9);
+		bool r_d0 = dOut & 0x0001;
+		bool r_d1 = dOut & 0x0002;
+		bool r_d2 = dOut & 0x0004;
+		bool r_d3 = dOut & 0x0008;
+		bool r_d4 = dOut & 0x0010;
+		bool r_d5 = dOut & 0x0020;
+		bool r_d6 = dOut & 0x0040;
+		bool r_d7 = dOut & 0x0080;
+		bool r_d8 = dOut & 0x0100;
+		bool r_d9 = dOut & 0x0200;
 		
 		// di0_data -> 0b{di9, di8, di7, di6, di5, di4, di3, di2}
 		// di1_data -> 0b{di23, di22, di21, di20, di19, di17, di11, di10}
