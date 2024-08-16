@@ -13,10 +13,15 @@ extern "C" {
 #include "driver/twai.h"
 
 void initTwai (const uint8_t tx, const uint8_t rx);
-void setTargetVelocity (const uint8_t id, int32_t msg);
-void setModesOfOperation (const uint8_t id, const int8_t msg);
-void setProfileAcceleration (const uint8_t, const uint32_t msg);
-void setProfileDeceleration (const uint8_t, const uint32_t msg);
+void setModesOfOperation (const uint8_t id, const int8_t msg); //6060
+void setTargetVelocity (const uint8_t id, const int32_t msg); //60FF
+void setProfileAcceleration (const uint8_t, const uint32_t msg); //6083
+void setProfileDeceleration (const uint8_t, const uint32_t msg); //6084
+void setTargetPosition (const uint8_t id, const int32_t msg); //607A
+void setProfileSpeed (const uint8_t id, const uint32_t msg); //6081
+void setControlWord (const uint8_t id, const uint16_t msg); //6040 
+//void initTwai (const uint8_t tx1, const uint8_t rx1, const uint8_t tx2, const uint8_t rx2);
+//void sendArbitraryCAN (const uint8_t id);
 
 #ifdef __cplusplus
 }

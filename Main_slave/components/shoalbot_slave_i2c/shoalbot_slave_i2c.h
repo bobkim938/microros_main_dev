@@ -5,8 +5,6 @@
 #include "esp_log.h"
 #include "esp_attr.h"
 #include "freertos/FreeRTOS.h"
-#include <memory>
-
 
 typedef struct {
     gpio_num_t sda;
@@ -45,6 +43,7 @@ class shoalbot_slave_i2c {
         i2c_slave_event_callbacks_t cbs;
         i2c_slave_rx_done_event_data_t rx_data;
         esp_err_t ret;  
+        //SemaphoreHandle_t i2c_mutex = xSemaphoreCreateBinary();
 
         uint8_t DO_cnt = 0;
         uint16_t parsed_data_DO = 0;
@@ -52,7 +51,7 @@ class shoalbot_slave_i2c {
 
         uint8_t parsed_data_BMS = 0;
 
-        uint8_t current_State[6] = {};
+        uint8_t current_State[5] = {};
 
         uint8_t batSW = 0;
 

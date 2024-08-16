@@ -16,7 +16,7 @@ shoalbot_slave_i2c::shoalbot_slave_i2c(i2c_slave_config* slave_config) {
 }
 
 esp_err_t shoalbot_slave_i2c::i2c_read() {
-    std::unique_ptr<uint8_t> data_rcv(new uint8_t());
+    uint8_t* data_rcv = (uint8_t *)(malloc(sizeof(uint8_t)));
     if (data_rcv == NULL) {
         ESP_LOGE("I2C", "Failed to allocate memory");
         return ESP_ERR_NO_MEM;
@@ -24,6 +24,7 @@ esp_err_t shoalbot_slave_i2c::i2c_read() {
     *data_rcv = 0;
     QueueHandle_t receive_queue = xQueueCreate(1, sizeof(i2c_slave_rx_done_event_data_t));
     if (receive_queue == NULL) {
+        free(data_rcv); 
         ESP_LOGE("I2C", "Failed to create queue");
         return 0; 
     }
@@ -31,12 +32,14 @@ esp_err_t shoalbot_slave_i2c::i2c_read() {
     cbs.on_recv_done = i2c_slave_rx_done_callback;
     esp_err_t err = i2c_slave_register_event_callbacks(slv_handle, &cbs, receive_queue);
     if (err != ESP_OK) {
+        free(data_rcv);
         vQueueDelete(receive_queue);
         return err;
     }
 
-    err = i2c_slave_receive(slv_handle, data_rcv.get(), 10);
+    err = i2c_slave_receive(slv_handle, data_rcv, 10);
     if (err != ESP_OK) {
+        free(data_rcv);
         vQueueDelete(receive_queue);
         return err;
     }
@@ -79,6 +82,22 @@ esp_err_t shoalbot_slave_i2c::i2c_read() {
             i2c_send_state(current_State, 6);
             State_ack_flag = false;
         }
+        // else if(batSW_ack_flag && *data_rcv == 0xAA) {
+        //     //printf("batSW received: %d\n", *data_rcv);
+        //     batSW_ack_flag = false;
+        //     new_batSW = true;
+        //     free(data_rcv); // free allocated memory
+        //     vQueueDelete(receive_queue); // delete the queue to free resources
+        //     return ret;
+        // }
+        // else if(batSW_ack_flag) {
+        //     ret = i2c_slave_transmit(slv_handle, &batSW, 1, -1);
+        //     //printf("batSW sent: %d\n", batSW);
+        //     if(ret != ESP_OK) {
+        //         //ESP_LOGE(TAG, "Failed to transmit data");
+        //     }
+        //     batSW_ack_flag = false;
+        // }
 
         if(*data_rcv == 0xBB && !DO_ack_flag && !State_ack_flag && !batSW_ack_flag) {
             DO_ack_flag = true;
@@ -89,10 +108,16 @@ esp_err_t shoalbot_slave_i2c::i2c_read() {
             new_State = true;
             // printf("DI acknowlodged\n");
         }
+        // else if(*data_rcv == 0xDD && !State_ack_flag && !DO_ack_flag && !BMS_ack_flag && !batSW_ack_flag) {
+        //     batSW_ack_flag = true;
+        //     new_batSW = true;
+        //     // printf("batSW acknowlodged\n");
+        // }
     } else {
         ESP_LOGE("I2C", "Failed to receive data");
     }
 
+    free(data_rcv); // free allocated memory
     vQueueDelete(receive_queue); // delete the queue to free resources
 
     return ESP_OK;

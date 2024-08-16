@@ -29,14 +29,9 @@
 #include <sensor_msgs/msg/imu.h>
 #include <sensor_msgs/msg/battery_state.h>
 #include <nav_msgs/msg/odometry.h>
-#include <shoalbot_msgs/msg/bms_state.h>
-#include <shoalbot_msgs/msg/di_state.h>
-#include <shoalbot_msgs/msg/do_cmd.h>
-#include <shoalbot_msgs/msg/encoder_count.h>
-#include <shoalbot_msgs/msg/kinco_mode.h>
-#include <shoalbot_msgs/msg/led_cmd.h>
-#include <shoalbot_msgs/msg/position_cmd.h>
-#include <shoalbot_msgs/msg/speed_cmd.h>
+//#include <shoalbot_msgs/msg/fast.h>
+//#include <shoalbot_msgs/msg/medium.h>
+//#include <shoalbot_msgs/msg/slow.h>
 
 #include "esp32_serial_transport.h"
 #include "kinco_can.h"
@@ -59,8 +54,8 @@
 #define PWM_1 GPIO_NUM_1
 #define PWM_2 GPIO_NUM_2
 #define RS2_DE GPIO_NUM_3
-// #define CAN2_TX GPIO_NUM_4
-// #define CAN2_RX GPIO_NUM_5
+#define CAN2_TX GPIO_NUM_4
+#define CAN2_RX GPIO_NUM_5
 #define CAN1_TX GPIO_NUM_6
 #define CAN1_RX GPIO_NUM_7
 #define RS1_DE GPIO_NUM_8
@@ -87,9 +82,6 @@
 #define DO_16 GPIO_NUM_42
 #define DO_19 GPIO_NUM_47
 
-#define DO_6 GPIO_NUM_4
-#define DO_7 GPIO_NUM_5
-
 unsigned long long time_offset = 0;
 unsigned long prev_odom_update = 0;
 unsigned long prev_time_update = 0;
@@ -109,27 +101,15 @@ int16_t left_count_now, left_count_prev, right_count_now, right_count_prev;
 int32_t left_counter, left_counter_prev, right_counter, right_counter_prev;
 float left_speed_m, right_speed_m;
 
-int32_t	left_kinco_pos, right_kinco_pos, left_kinco_speed, right_kinco_speed; //TO remove after acceptance test
-
-//rcl_publisher_t imu_publisher, odom_publisher, bms_publisher, di_publisher;
-rcl_publisher_t bms_publisher, di_publisher, encoder_publisher; 
-//sensor_msgs__msg__Imu imu_msg;
-//sensor_msgs__msg__BatteryState bms_msg;
-//nav_msgs__msg__Odometry odom_msg;
-//std_msgs__msg__Int32 di_msg;
-shoalbot_msgs__msg__BmsState bms_msg;
-shoalbot_msgs__msg__DiState di_msg;
-shoalbot_msgs__msg__EncoderCount encoder_msg;
-
-//rcl_subscription_t twist_subscriber, do_subscriber;
-rcl_subscription_t do_subscriber, kinco_subscriber, led_subscriber, position_subscriber, speed_subscriber;
-//geometry_msgs__msg__Twist twist_msg;
-//std_msgs__msg__Int32 do_msg;
-shoalbot_msgs__msg__DoCmd do_msg;
-shoalbot_msgs__msg__KincoMode kinco_msg;
-shoalbot_msgs__msg__LedCmd led_msg;
-shoalbot_msgs__msg__PositionCmd position_msg;
-shoalbot_msgs__msg__SpeedCmd speed_msg;
+rcl_publisher_t imu_publisher, odom_publisher, bms_publisher, di_publisher; //, custom_publisher;
+sensor_msgs__msg__Imu imu_msg;
+sensor_msgs__msg__BatteryState bms_msg;
+nav_msgs__msg__Odometry odom_msg;
+std_msgs__msg__Int32 di_msg;
+//my_custom_message__msg__MyCustomMessage custom_msg;
+rcl_subscription_t twist_subscriber, do_subscriber;
+geometry_msgs__msg__Twist twist_msg;
+std_msgs__msg__Int32 do_msg;
 
 static size_t uart_port = UART_NUM_0; // UART port for micro-ROS
 
@@ -177,7 +157,7 @@ shoalbot_master_i2c my_i2c(&i2c_config);
 int32_t di_buffer;
 bool new_DO = false;
 bool new_DI = false;
-uint8_t slave_do[5] = {0xBB, 0x0B, 0x00, 0x00, 0x00}; // first byte to indicating DO cmd, second bit 2 MSB
+uint8_t slave_do[6] = {0xBB, 0x00, 0x0B, 0x01, 0x00, 0x00}; // first byte to indicating DO cmd, second bit 2 MSB
 uint16_t master_do = 0;
 uint32_t bat_percentage = 0;
 
@@ -196,11 +176,6 @@ void reset_gpio() {
     gpio_reset_pin(DO_17); // 131072
     gpio_reset_pin(DO_18); // 262144
     gpio_reset_pin(DO_19); // 524288
-
-	gpio_reset_pin(DO_6);
-	gpio_reset_pin(DO_7);
-	gpio_set_direction(DO_6, GPIO_MODE_OUTPUT);
-	gpio_set_direction(DO_7, GPIO_MODE_OUTPUT);
 
     gpio_set_direction(DO_10, GPIO_MODE_OUTPUT);
     gpio_set_direction(DO_11, GPIO_MODE_OUTPUT);
@@ -227,9 +202,6 @@ void set_DO() {
     bool do18 = master_do & 0x0100;
     bool do19 = master_do & 0x0200;
 
-	bool do6 = master_do & 0x0400;
-	bool do7 = master_do & 0x0800;
-
     gpio_set_level(DO_10, do10);
     gpio_set_level(DO_11, do11);
     gpio_set_level(DO_12, do12);
@@ -240,12 +212,9 @@ void set_DO() {
     gpio_set_level(DO_17, do17);
     gpio_set_level(DO_18, do18);
     gpio_set_level(DO_19, do19);
-
-	gpio_set_level(DO_6, do6);
-	gpio_set_level(DO_7, do6);
 }
 
-/*
+
 void twist_callback(const void * msgin) {
 	left_speed = (twist_msg.linear.x - (twist_msg.angular.z*wheel_base_*0.5)) / (wheel_diameter_*M_PI) * 60 * gear_ratio_; 
 	right_speed = (twist_msg.linear.x + (twist_msg.angular.z*wheel_base_*0.5)) / (wheel_diameter_*M_PI) * 60 * gear_ratio_; 
@@ -255,44 +224,29 @@ void twist_callback(const void * msgin) {
 
 void do_callback(const void * msgin) {
 	uint32_t do_data = do_msg.data;
+
+	/*
+	Bit7	Bit6	Bit5	Bit4	Bit3	Bit2	Bit1	LSB
+	DO_7 	DO_6 	DO_5 	DO_4 	DO_3 	DO_2 	DO_1 	DO_0 
+
+	Bit15	Bit14	Bit13	Bit12	Bit11	Bit10	Bit9	Bit8
+	DO_15 	DO_14 	DO_13 	DO_12 	DO_11 	DO_10 	DO_9 	DO_8 
+
+	Bit23	Bit22	Bit21	Bit20	Bit19	Bit18	Bit17	Bit16
+	Nav_3 	Nav_2 	Nav_1 	Nav_0 	DO_19 	DO_18 	DO_17 	DO_16 
+
+	MSB		Bit30	Bit29	Bit28	Bit27	Bit26	Bit25	Bit24
+	(reserved) 	 	Nav_9 	Nav_8 	Nav_7 	Nav_6 	Nav_5 	Nav_4 
+	*/
+
 	slave_do[2] = do_data & 0x000000FF; // Do0-DO7 (Slave)
     slave_do[1] = (do_data & 0x00000300) >> 8; // Do8-DO9 (Slave)
     master_do = (do_data & 0x000FFC00) >> 10; // Do10-DO19 (Master)
+//	slave_do[3] = (do_data & 0x00000003) >> 28; // Nav_state 8,9
+//	slave_do[4] = (do_data & 0x00000FF0) >> 20; // Nav_state 0-7
     new_DO = true;
 }
-*/
 
-void do_callback(const void * msgin) {
-	uint32_t do_data = do_msg.data;
-	// slave_do[2] = do_data & 0x000000FF; // Do0-DO7 (Slave)
-    // slave_do[1] = (do_data & 0x00000300) >> 8; // Do8-DO9 (Slave)
-	slave_do[1] = ((do_data >> 2 & 0xC0)) | (do_data & 0x3F); // DO9-DO8 (Slave), DO5-DO0 (Slave)
-    master_do = (do_data & 0x000FFC00) >> 10; // Do10-DO19 (Master)
-	master_do |= (((do_data >> 6) & 0x03) << 10); // DO6-DO7 (Master)
-    new_DO = true;
-}
-int8_t kinco_mode = 3;
-void kinco_callback(const void * msgin) {
-	kinco_mode = kinco_msg.mode;
-	setModesOfOperation(1, kinco_mode);
-	setModesOfOperation(2, kinco_mode);
-}
-
-void led_callback(const void * msgin) {
-	uint8_t color_index = led_msg.color;
-	slave_do[4] = color_index; // LSB PART OF NAV STATUS
-}
-
-void position_callback(const void * msgin) {
-	left_kinco_pos = position_msg.left;
-	right_kinco_pos = position_msg.right;
-}
-
-void speed_callback(const void * msgin) {
-	left_kinco_speed = speed_msg.left;
-	right_kinco_speed = speed_msg.right;
-}
-/*
 void battery_ros_init(void) { // Initializes the ROS topic information for Batery
 	bms_msg.power_supply_technology = 4;
 	bms_msg.present = 1;
@@ -300,8 +254,8 @@ void battery_ros_init(void) { // Initializes the ROS topic information for Bater
 //	bms_msg.serial_number = micro_ros_string_utilities_set(bms_msg.serial_number, "");
 //	bms_msg.header.frame_id = micro_ros_string_utilities_set(bms_msg.header.frame_id, "battery");
 }
-*/
-/*
+
+
 void imu_ros_init(void) { // Initializes the ROS topic information for IMU
 	imu_msg.angular_velocity.x = 0;
 	imu_msg.angular_velocity.y = 0;
@@ -324,8 +278,7 @@ void imu_ros_init(void) { // Initializes the ROS topic information for IMU
 	imu_msg.orientation_covariance[4] = 0.00001;
 	imu_msg.orientation_covariance[8] = 0.00001;
 }
-*/
-/*
+
 void odom_ros_init(void) {
 	odom_msg.header.frame_id = micro_ros_string_utilities_set(odom_msg.header.frame_id, "odom");
 	odom_msg.child_frame_id = micro_ros_string_utilities_set(odom_msg.child_frame_id, "base_link");
@@ -341,8 +294,7 @@ void odom_ros_init(void) {
 	odom_msg.twist.covariance[7] = 0.0001;
 	odom_msg.twist.covariance[35] = 0.0001;
 }
-*/
-/*
+
 void odom_euler_to_quat(float roll, float pitch, float yaw, float *q) {
 	float cy = cos(yaw * 0.5);
 	float sy = sin(yaw * 0.5);
@@ -355,7 +307,6 @@ void odom_euler_to_quat(float roll, float pitch, float yaw, float *q) {
 	q[2] = sy * cp * sr + cy * sp * cr;
 	q[3] = sy * cp * cr - cy * sp * sr;
 }
-*/
 
 unsigned long get_millisecond(void) { // Get the number of seconds since boot
 	return (unsigned long) (esp_timer_get_time() / 1000ULL);
@@ -367,7 +318,7 @@ static void sync_time(void) { // Calculate the time difference between the micro
 	unsigned long long ros_time_ms = rmw_uros_epoch_millis();
 	time_offset = ros_time_ms - now;    
 }
-/*
+
 struct timespec get_timespec(void) { // Get timestamp
 	struct timespec tp = {};
 	unsigned long long now = get_millisecond() + time_offset; // deviation of synchronous time
@@ -375,8 +326,7 @@ struct timespec get_timespec(void) { // Get timestamp
 	tp.tv_nsec = (now % 1000) * 1000000;
 	return tp;
 }
-*/
-/*
+
 void odom_update(float vel_dt, float linear_vel_x, float linear_vel_y, float angular_vel_z) {
 	float delta_heading = angular_vel_z * vel_dt; // radians
 	float cos_h = cos(heading_);
@@ -404,8 +354,7 @@ void odom_update(float vel_dt, float linear_vel_x, float linear_vel_y, float ang
 	// angular speed from encoders
 	odom_msg.twist.twist.angular.z = angular_vel_z;
 }
-*/
-/*
+
 void imu_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 	RCLC_UNUSED(last_call_time);
 	if (timer != NULL) {
@@ -423,34 +372,34 @@ void imu_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 		RCSOFTCHECK(rcl_publish(&imu_publisher, &imu_msg, NULL));
 	}
 }
-*/
-// void odom_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
-// 	RCLC_UNUSED(last_call_time);
-// 	if (timer != NULL) {
-// /*		unsigned long now = get_millisecond();
-// 		float vel_dt = (now - prev_odom_update) / 1000.0;
-// 		prev_odom_update = now;
-// 		left_speed_m = (left_counter - left_counter_prev) / vel_dt / cpr * M_PI * wheel_diameter_; // measure m/s
-// 		right_speed_m = (right_counter - right_counter_prev) / vel_dt / cpr * M_PI * wheel_diameter_; // measure m/s
-// 		left_speed_filtered = left_speed_filter.process(left_speed_m);
-// 		right_speed_filtered = right_speed_filter.process(right_speed_m);
-// 		float Vx = (right_speed_filtered + left_speed_filtered) * 0.5; //robot m/s
-// 		float Vy = 0;
-// 		float Wz = (right_speed_filtered - left_speed_filtered) / wheel_base_; // robot rad/s
-// 		odom_update(vel_dt, Vx, Vy, Wz);
-// //		test_msg.data = right_speed_m;
-// 		test_msg.data = right_speed_filtered;
-// 		left_counter_prev = left_counter;
-// 		right_counter_prev = right_counter; */
-// 		struct timespec time_stamp = get_timespec();
-// 		odom_msg.header.stamp.sec = time_stamp.tv_sec;
-// 		odom_msg.header.stamp.nanosec = time_stamp.tv_nsec;
-// 		//odom_msg.header.stamp.sec = rmw_uros_epoch_millis()/1000.0;
-// 		//odom_msg.header.stamp.nanosec = rmw_uros_epoch_nanos();
-// 		RCSOFTCHECK(rcl_publish(&odom_publisher, &odom_msg, NULL));
-// 	}
-// }
-/*
+
+void odom_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
+	RCLC_UNUSED(last_call_time);
+	if (timer != NULL) {
+/*		unsigned long now = get_millisecond();
+		float vel_dt = (now - prev_odom_update) / 1000.0;
+		prev_odom_update = now;
+		left_speed_m = (left_counter - left_counter_prev) / vel_dt / cpr * M_PI * wheel_diameter_; // measure m/s
+		right_speed_m = (right_counter - right_counter_prev) / vel_dt / cpr * M_PI * wheel_diameter_; // measure m/s
+		left_speed_filtered = left_speed_filter.process(left_speed_m);
+		right_speed_filtered = right_speed_filter.process(right_speed_m);
+		float Vx = (right_speed_filtered + left_speed_filtered) * 0.5; //robot m/s
+		float Vy = 0;
+		float Wz = (right_speed_filtered - left_speed_filtered) / wheel_base_; // robot rad/s
+		odom_update(vel_dt, Vx, Vy, Wz);
+//		test_msg.data = right_speed_m;
+		test_msg.data = right_speed_filtered;
+		left_counter_prev = left_counter;
+		right_counter_prev = right_counter; */
+		struct timespec time_stamp = get_timespec();
+		odom_msg.header.stamp.sec = time_stamp.tv_sec;
+		odom_msg.header.stamp.nanosec = time_stamp.tv_nsec;
+		//odom_msg.header.stamp.sec = rmw_uros_epoch_millis()/1000.0;
+		//odom_msg.header.stamp.nanosec = rmw_uros_epoch_nanos();
+		RCSOFTCHECK(rcl_publish(&odom_publisher, &odom_msg, NULL));
+	}
+}
+
 void bms_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 	RCLC_UNUSED(last_call_time);
 	if (timer != NULL) {
@@ -466,32 +415,21 @@ void bms_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 void di_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 	RCLC_UNUSED(last_call_time);
 	if (timer != NULL) {
-		di_msg.data = di_buffer; 
-		RCSOFTCHECK(rcl_publish(&di_publisher, &di_msg, NULL));
-	}
-}
-*/
-void bms_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
-	RCLC_UNUSED(last_call_time);
-	if (timer != NULL) {
-		RCSOFTCHECK(rcl_publish(&bms_publisher, &bms_msg, NULL));
-	}
-}
-
-void di_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
-	RCLC_UNUSED(last_call_time);
-	if (timer != NULL) {
 		di_msg.data = di_buffer;
 		RCSOFTCHECK(rcl_publish(&di_publisher, &di_msg, NULL));
 	}
 }
-
-void encoder_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
+/*
+void custom_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 	RCLC_UNUSED(last_call_time);
 	if (timer != NULL) {
-		RCSOFTCHECK(rcl_publish(&encoder_publisher, &encoder_msg, NULL));
+		struct timespec time_stamp = get_timespec();
+		custom_msg.stamp.sec = time_stamp.tv_sec;
+		custom_msg.stamp.nanosec = time_stamp.tv_nsec;
+		RCSOFTCHECK(rcl_publish(&custom_publisher, &custom_msg, NULL));
 	}
 }
+*/
 
 void micro_ros_task(void * arg) {
 	rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -514,61 +452,44 @@ void micro_ros_task(void * arg) {
 
 	// create publisher
 	//RCCHECK(rclc_publisher_init_best_effort(&imu_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "imu/data_raw"));
-//	RCCHECK(rclc_publisher_init_default(&imu_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "imu/data_raw"));
-//	RCCHECK(rclc_publisher_init_default(&odom_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry), "odom/data_raw"));
-//	RCCHECK(rclc_publisher_init_default(&bms_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, BatteryState), "bms"));
-//	RCCHECK(rclc_publisher_init_default(&di_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "di"));
-	RCCHECK(rclc_publisher_init_default(&bms_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(shoalbot_msgs, msg, BmsState), "bms"));
-	RCCHECK(rclc_publisher_init_default(&di_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(shoalbot_msgs, msg, DiState), "di"));
-	RCCHECK(rclc_publisher_init_default(&encoder_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(shoalbot_msgs, msg, EncoderCount), "encoder"));
+	RCCHECK(rclc_publisher_init_default(&imu_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu), "imu/data_raw"));
+	RCCHECK(rclc_publisher_init_default(&odom_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry), "odom/data_raw"));
+	RCCHECK(rclc_publisher_init_default(&bms_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, BatteryState), "bms"));
+	RCCHECK(rclc_publisher_init_default(&di_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "di"));
+//	RCCHECK(rclc_publisher_init_default(&custom_publisher, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(my_custom_message, msg, MyCustomMessage), "custom"));
 
 	// Create subscriber
-//	RCCHECK(rclc_subscription_init_default(&twist_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "cmd_vel"))
-//	RCCHECK(rclc_subscription_init_default(&do_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "do"))
-	RCCHECK(rclc_subscription_init_default(&do_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(shoalbot_msgs, msg, DoCmd), "do"))
-	RCCHECK(rclc_subscription_init_default(&kinco_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(shoalbot_msgs, msg, KincoMode), "kinco"))
-	RCCHECK(rclc_subscription_init_default(&led_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(shoalbot_msgs, msg, LedCmd), "led"))
-	RCCHECK(rclc_subscription_init_default(&position_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(shoalbot_msgs, msg, PositionCmd), "position"))
-	RCCHECK(rclc_subscription_init_default(&speed_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(shoalbot_msgs, msg, SpeedCmd), "speed"))
+	RCCHECK(rclc_subscription_init_default(&twist_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist), "cmd_vel"))
+	RCCHECK(rclc_subscription_init_default(&do_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "do"))
 
 	// Create timer
-//	rcl_timer_t imu_timer = rcl_get_zero_initialized_timer(); 
-//	rcl_timer_t odom_timer = rcl_get_zero_initialized_timer();
-//	rcl_timer_t bms_timer = rcl_get_zero_initialized_timer();
-//	rcl_timer_t di_timer = rcl_get_zero_initialized_timer();
+	//rcl_timer_t imu_timer, odom_timer, bms_timer, custom_timer;
+	rcl_timer_t imu_timer = rcl_get_zero_initialized_timer(); 
+	rcl_timer_t odom_timer = rcl_get_zero_initialized_timer();
 	rcl_timer_t bms_timer = rcl_get_zero_initialized_timer();
 	rcl_timer_t di_timer = rcl_get_zero_initialized_timer();
-	rcl_timer_t encoder_timer = rcl_get_zero_initialized_timer();
-//	RCCHECK(rclc_timer_init_default(&imu_timer, &support, RCL_MS_TO_NS(20), imu_timer_callback));
-//	RCCHECK(rclc_timer_init_default(&odom_timer, &support, RCL_MS_TO_NS(50), odom_timer_callback));
-//	RCCHECK(rclc_timer_init_default(&bms_timer, &support, RCL_S_TO_NS(5), bms_timer_callback));
-//	RCCHECK(rclc_timer_init_default(&di_timer, &support, RCL_MS_TO_NS(200), di_timer_callback));
+//	rcl_timer_t custom_timer = rcl_get_zero_initialized_timer();
+	RCCHECK(rclc_timer_init_default(&imu_timer, &support, RCL_MS_TO_NS(20), imu_timer_callback));
+	RCCHECK(rclc_timer_init_default(&odom_timer, &support, RCL_MS_TO_NS(50), odom_timer_callback));
 	RCCHECK(rclc_timer_init_default(&bms_timer, &support, RCL_S_TO_NS(5), bms_timer_callback));
-	RCCHECK(rclc_timer_init_default(&di_timer, &support, RCL_MS_TO_NS(200), di_timer_callback));
-	RCCHECK(rclc_timer_init_default(&encoder_timer, &support, RCL_MS_TO_NS(50), encoder_timer_callback));
+	RCCHECK(rclc_timer_init_default(&di_timer, &support, RCL_MS_TO_NS(500), di_timer_callback));
+//	RCCHECK(rclc_timer_init_default(&custom_timer, &support, RCL_MS_TO_NS(1000), custom_timer_callback));
 
 	// Create executor
 	//rclc_executor_t executor;
 	rclc_executor_t executor = rclc_executor_get_zero_initialized_executor();
-	RCCHECK(rclc_executor_init(&executor, &support.context, 9, &allocator));
+	RCCHECK(rclc_executor_init(&executor, &support.context, 7, &allocator));
 	unsigned int rcl_wait_timeout = 1000; 
 	RCCHECK(rclc_executor_set_timeout(&executor, RCL_MS_TO_NS(rcl_wait_timeout)));
 
 	// Add timer and subsriber to executor
-//	RCCHECK(rclc_executor_add_timer(&executor, &imu_timer));
-//	RCCHECK(rclc_executor_add_timer(&executor, &odom_timer));
-//	RCCHECK(rclc_executor_add_timer(&executor, &bms_timer));
-//	RCCHECK(rclc_executor_add_timer(&executor, &di_timer));
+	RCCHECK(rclc_executor_add_timer(&executor, &imu_timer));
+	RCCHECK(rclc_executor_add_timer(&executor, &odom_timer));
 	RCCHECK(rclc_executor_add_timer(&executor, &bms_timer));
 	RCCHECK(rclc_executor_add_timer(&executor, &di_timer));
-	RCCHECK(rclc_executor_add_timer(&executor, &encoder_timer));
-//	RCCHECK(rclc_executor_add_subscription(&executor, &twist_subscriber, &twist_msg, &twist_callback, ON_NEW_DATA));
-//	RCCHECK(rclc_executor_add_subscription(&executor, &do_subscriber, &do_msg, &do_callback, ON_NEW_DATA));
+//	RCCHECK(rclc_executor_add_timer(&executor, &custom_timer));
+	RCCHECK(rclc_executor_add_subscription(&executor, &twist_subscriber, &twist_msg, &twist_callback, ON_NEW_DATA));
 	RCCHECK(rclc_executor_add_subscription(&executor, &do_subscriber, &do_msg, &do_callback, ON_NEW_DATA));
-	RCCHECK(rclc_executor_add_subscription(&executor, &kinco_subscriber, &kinco_msg, &kinco_callback, ON_NEW_DATA));
-	RCCHECK(rclc_executor_add_subscription(&executor, &led_subscriber, &led_msg, &led_callback, ON_NEW_DATA));
-	RCCHECK(rclc_executor_add_subscription(&executor, &position_subscriber, &position_msg, &position_callback, ON_NEW_DATA));
-	RCCHECK(rclc_executor_add_subscription(&executor, &speed_subscriber, &speed_msg, &speed_callback, ON_NEW_DATA));
 
 	sync_time();
 
@@ -579,56 +500,29 @@ void micro_ros_task(void * arg) {
 	}
 
 	// Free resources
-//	RCCHECK(rcl_subscription_fini(&twist_subscriber, &node));
-//	RCCHECK(rcl_subscription_fini(&do_subscriber, &node));
+	RCCHECK(rcl_subscription_fini(&twist_subscriber, &node));
 	RCCHECK(rcl_subscription_fini(&do_subscriber, &node));
-	RCCHECK(rcl_subscription_fini(&kinco_subscriber, &node));
-	RCCHECK(rcl_subscription_fini(&led_subscriber, &node));
-	RCCHECK(rcl_subscription_fini(&position_subscriber, &node));
-	RCCHECK(rcl_subscription_fini(&speed_subscriber, &node));
-//	RCCHECK(rcl_publisher_fini(&imu_publisher, &node));
-//	RCCHECK(rcl_publisher_fini(&odom_publisher, &node));
-//	RCCHECK(rcl_publisher_fini(&bms_publisher, &node));
-//	RCCHECK(rcl_publisher_fini(&di_publisher, &node));
+	RCCHECK(rcl_publisher_fini(&imu_publisher, &node));
+	RCCHECK(rcl_publisher_fini(&odom_publisher, &node));
 	RCCHECK(rcl_publisher_fini(&bms_publisher, &node));
 	RCCHECK(rcl_publisher_fini(&di_publisher, &node));
-	RCCHECK(rcl_publisher_fini(&encoder_publisher, &node));
+//	RCCHECK(rcl_publisher_fini(&custom_publisher, &node));
 	RCCHECK(rcl_node_fini(&node));
 
 	vTaskDelete(NULL);
 }
-/*
+
 void twai_task(void *arg) { // Kinco motor task
 	while (1) {
 		setTargetVelocity(1, left_input_filtered); 
 		setTargetVelocity(2, right_input_filtered); 
-	}
-	vTaskDelete(NULL);
-}
-*/
-void twai_task(void *arg) { // Kinco motor task
-	setProfileSpeed(1, 15);
-	setProfileSpeed(2, 15);
-	while (1) {
-		switch (kinco_mode) {
-			case 1:
-				setTargetPosition(1, left_kinco_pos); 
-				setTargetPosition(2, right_kinco_pos);
-				//setControlWord(2, 0x3F);
-				break;
-			case 3: 
-				setTargetVelocity(1, left_kinco_speed); 
-				setTargetVelocity(2, right_kinco_speed);
-				break;
-			default:
-				break;
-		}
-		vTaskDelay(pdMS_TO_TICKS(10));
+//		setTargetVelocity(1, 50); 
+//		setTargetVelocity(2, 50); 
+
 	}
 	vTaskDelete(NULL);
 }
 
-/*
 void spi_task(void *arg) { // IMU and safety encoder data task
 	while (1) {
 		gyro_x = imu.get_gyro_x(); 
@@ -648,12 +542,12 @@ void spi_task(void *arg) { // IMU and safety encoder data task
 		float vel_dt = (now - prev_odom_update) / 1000000.0;
 		prev_odom_update = now;
 
-			
-		//moving forward: -3 -2 -1 0 1 2 3
-		//reset forward: 2045 2046 2047 0 1 2 3
-		//moving backward: 3 2 1 0 -1 -2 -3
-		//reset backward: -2045 -2046 -2047 -2048 -1 -2 -3
-
+		/*	
+		moving forward: -3 -2 -1 0 1 2 3
+		reset forward: 2045 2046 2047 0 1 2 3
+		moving backward: 3 2 1 0 -1 -2 -3
+		reset backward: -2045 -2046 -2047 -2048 -1 -2 -3
+		*/
 		if (right_count_now > right_count_prev) { // moving forward or reset after moving backward
 			if (abs(right_count_now - right_count_prev) > 1024) right_counter = right_counter - (2048 - right_count_now + right_count_prev); //reset backward
 			else right_counter = right_counter + (right_count_now - right_count_prev); //moving forward
@@ -696,56 +590,7 @@ void spi_task(void *arg) { // IMU and safety encoder data task
 	}
 	vTaskDelete(NULL);
 }
-*/
-void spi_task(void *arg) { // IMU and safety encoder data task
-	while (1) {
-		gyro_x = imu.get_gyro_x(); 
-		gyro_y = imu.get_gyro_y(); 
-		gyro_z = imu.get_gyro_z(); 
-		accel_x = imu.get_accel_x(); 
-		accel_y = imu.get_accel_y(); 
-		accel_z = imu.get_accel_z(); 
-		vTaskDelay(pdMS_TO_TICKS(2));
 
-		left_count_now = left_encoder.readMVAL() * -1;
-		right_count_now = right_encoder.readMVAL();
-		unsigned long now = esp_timer_get_time();
-		prev_odom_update = now;
-		/*	
-		moving forward: -3 -2 -1 0 1 2 3
-		reset forward: 2045 2046 2047 0 1 2 3
-		moving backward: 3 2 1 0 -1 -2 -3
-		reset backward: -2045 -2046 -2047 -2048 -1 -2 -3
-		*/
-		if (right_count_now > right_count_prev) { // moving forward or reset after moving backward
-			if (abs(right_count_now - right_count_prev) > 1024) right_counter = right_counter - (2048 - right_count_now + right_count_prev); //reset backward
-			else right_counter = right_counter + (right_count_now - right_count_prev); //moving forward
-		}
-		else if (right_count_now < right_count_prev) { //moving backward or reset after moving forward
-			if (abs(right_count_now - right_count_prev) > 1024) right_counter = right_counter + (right_count_now - right_count_prev + 2048); //reset forward
-			else right_counter = right_counter - (right_count_prev - right_count_now); //moving backward
-		}
-		else {} 
-		right_count_prev = right_count_now;
-
-		if (left_count_now > left_count_prev) { // moving forward or reset after moving backward
-			if (abs(left_count_now - left_count_prev) > 1024) left_counter = left_counter - (2048 - left_count_now + left_count_prev); //reset backward
-			else left_counter = left_counter + (left_count_now - left_count_prev); //moving forward
-		}
-		else if (left_count_now < left_count_prev) { //moving backward or reset after moving forward
-			if (abs(left_count_now - left_count_prev) > 1024) left_counter = left_counter + (left_count_now - left_count_prev + 2048);  //reset forward
-			else left_counter = left_counter - (left_count_prev - left_count_now); //moving backward
-		}
-		else {} 
-		left_count_prev = left_count_now;
-		encoder_msg.left = left_counter;
-		encoder_msg.right = right_counter;
-		vTaskDelay(pdMS_TO_TICKS(2));
-	}
-	vTaskDelete(NULL);
-}
-
-/*
 void rs485_task(void *arg) { // BMS task
 	while (1) {
         bms.getBMSData();
@@ -758,18 +603,7 @@ void rs485_task(void *arg) { // BMS task
         bms_msg.percentage = bms.getCharge() / bms.getCapacity();
         bms_msg.cell_temperature.size = 3;
         bms_msg.cell_temperature.data = bms.getCellTemperature();
-		vTaskDelay(pdMS_TO_TICKS(2000));
-	}
-	vTaskDelete(NULL);
-}
-*/
-void rs485_task(void *arg) { // BMS task
-	while (1) {
-        bms.getBMSData();
-        bms_msg.voltage = bms.getVoltage();
-        bms_msg.temperature = bms.getTemperature();
-        bms_msg.current = bms.getCurrent();
-        bms_msg.battery_level = bms.getCharge() / bms.getCapacity();
+//		slave_do[5] = (uint8_t)bms_msg.percentage;
 		vTaskDelay(pdMS_TO_TICKS(2000));
 	}
 	vTaskDelete(NULL);
@@ -780,14 +614,15 @@ void i2c_task(void *arg) { // I2C master task
 	// DO 9 8 7 6 5 4 3 2 1 0
 	//    0 0 0 0 0 0 1 0 1 1
 	// slave_do[0] = {0xBB}
-	// slave_do[1] = {DO9, DO8, DO5, DO4, DO3, DO2, DO1, DO0} LSB PART OF SLAVE DO
-	// slave_do[2] = {0, 0, 0, 0, 0, 0, 0, nav_st9, nav_st8} MSB PART OF NAV STATUS
-	// slave_do[3] = {nav_st7, nav_st6, nav_st5, nav_st4, nav_st3, nav_st2, nav_st1, nav_st0} LSB PART OF NAV STATUS
-	// slave_do[4] = BMS PERCENTAGE
+	// slave_do[1] = {0, 0, 0, 0, 0, 0, DO9, DO8} MSB PART OF SLAVE DO
+	// slave_do[2] = {DO7, DO6, DO5, DO4, DO3, DO2, DO1, DO0} LSB PART OF SLAVE DO
+	// slave_do[3] = {0, 0, 0, 0, 0, 0, 0, nav_st9, nav_st8} MSB PART OF NAV STATUS
+	// slave_do[4] = {nav_st7, nav_st6, nav_st5, nav_st4, nav_st3, nav_st2, nav_st1, nav_st0} LSB PART OF NAV STATUS
+	// slave_do[5] = BMS PERCENTAGE
 
 	float a = 97.3;
-	slave_do[4] = (uint8_t) a;
-	//slave_do[4] = 1;
+	slave_do[5] = (uint8_t) a;
+
 	while (1) {
 		di_buffer = my_i2c.read_state();
 		vTaskDelay(pdMS_TO_TICKS(100));
@@ -801,16 +636,14 @@ extern "C" void app_main(void) {
 	vTaskDelay(pdMS_TO_TICKS(10));
 	estop.begin();
 	vTaskDelay(pdMS_TO_TICKS(10));
-//	battery_ros_init();
+	battery_ros_init();
 	initTwai(CAN1_TX, CAN1_RX);
-	setModesOfOperation(1, 3);
-	setModesOfOperation(2, 3);
 	imu.begin();
-//	imu_ros_init();
+	imu_ros_init();
 	left_encoder.begin();
 	right_encoder.begin();
 	vTaskDelay(pdMS_TO_TICKS(10));
-//	odom_ros_init();
+	odom_ros_init();
 	left_encoder.reset_cnt();
 	right_encoder.reset_cnt();
 	left_count_now = 0; left_count_prev = 0; right_count_now = 0; right_count_prev = 0;
@@ -832,7 +665,7 @@ extern "C" void app_main(void) {
 	//xTaskCreatePinnedToCore(micro_ros_task, "uros_task", CONFIG_MICRO_ROS_APP_STACK, NULL, CONFIG_MICRO_ROS_APP_TASK_PRIO, NULL, 0);
 	xTaskCreate(spi_task, "spi_task", 16000, NULL, 5, NULL);
 	//xTaskCreatePinnedToCore(spi_task, "spi_task", 16000, NULL, 5, NULL, 1);
-	xTaskCreate(rs485_task, "rs485_task", 16000, NULL, 5, NULL);
+//	xTaskCreate(rs485_task, "rs485_task", 16000, NULL, 5, NULL);
 	//xTaskCreatePinnedToCore(rs485_task, "rs485_task", 16000, NULL, 5, NULL, 1);
 	xTaskCreate(twai_task, "twai_task", 16000, NULL, 5, NULL);
 	//xTaskCreatePinnedToCore(twai_task, "twai_task", 16000, NULL, 5, NULL, 1);

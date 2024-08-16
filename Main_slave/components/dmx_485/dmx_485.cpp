@@ -94,6 +94,8 @@ void DMX::Initialize(DMXDirection direction, uint16_t StartAddr, uint16_t NbChan
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_2,
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .rx_flow_ctrl_thresh = 0,
+        .source_clk = UART_SCLK_DEFAULT,
     };
 
     uart_param_config(DMX_UART_NUM, &uart_config);

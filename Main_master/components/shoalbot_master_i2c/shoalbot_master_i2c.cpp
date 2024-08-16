@@ -62,12 +62,12 @@ esp_err_t shoalbot_master_i2c::i2c_send_DO(uint8_t* data) { // first byte 0xBB f
         //ESP_LOGE(TAG, "Failed to transmit data");
         return ret;
     }
-    vTaskDelay(1);
-    ret = i2c_master_transmit(i2c_master_handle, data + 5, 1, 10);
-    if(ret != ESP_OK) {
-        //ESP_LOGE(TAG, "Failed to transmit data");
-        return ret;
-    }
+    // vTaskDelay(1);
+    // ret = i2c_master_transmit(i2c_master_handle, data + 5, 1, 10);
+    // if(ret != ESP_OK) {
+    //     //ESP_LOGE(TAG, "Failed to transmit data");
+    //     return ret;
+    // }
     // printf("sending DO\n");
     return ret;
 }
@@ -88,6 +88,7 @@ uint32_t shoalbot_master_i2c::read_state() {
     DI_fromSlave = ((uint32_t)state_data[0]) << 16 | ((uint32_t)state_data[1]) << 8 | ((uint32_t)state_data[2]);
     DO_slave[0] = state_data[3];
     DO_slave[1] = 0x03 & state_data[4];
+    
     AMR_state[1] = state_data[4] >> 2;
     AMR_state[0] = state_data[5];
 
