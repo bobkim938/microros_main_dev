@@ -214,35 +214,41 @@ void reset_gpio() {
     gpio_set_direction(DO_19, GPIO_MODE_OUTPUT);
 }
 
-void set_DO() {
-	uint16_t master_do = 0;
-    bool do10 = master_do & 0x0001;
-    bool do11 = master_do & 0x0002;
-    bool do12 = master_do & 0x0004;
-    bool do13 = master_do & 0x0008;
-    bool do14 = master_do & 0x0010;
-    bool do15 = master_do & 0x0020;
-    bool do16 = master_do & 0x0040;
-    bool do17 = master_do & 0x0080;
-    bool do18 = master_do & 0x0100;
-    bool do19 = master_do & 0x0200;
+void set_DO(void* arg) {
+	// uint16_t master_do = 0;
+	while(1) {
+		if(new_DO) {
+			new_DO = false;
+			bool do10 = master_do & 0x0001;
+			bool do11 = master_do & 0x0002;
+			bool do12 = master_do & 0x0004;
+			bool do13 = master_do & 0x0008;
+			bool do14 = master_do & 0x0010;
+			bool do15 = master_do & 0x0020;
+			bool do16 = master_do & 0x0040;
+			bool do17 = master_do & 0x0080;
+			bool do18 = master_do & 0x0100;
+			bool do19 = master_do & 0x0200;
 
-	bool do6 = master_do & 0x0400;
-	bool do7 = master_do & 0x0800;
+			bool do6 = master_do & 0x0400;
+			bool do7 = master_do & 0x0800;
 
-    gpio_set_level(DO_10, do10);
-    gpio_set_level(DO_11, do11);
-    gpio_set_level(DO_12, do12);
-    gpio_set_level(DO_13, do13);
-    gpio_set_level(DO_14, do14);
-    gpio_set_level(DO_15, do15);
-    gpio_set_level(DO_16, do16);
-    gpio_set_level(DO_17, do17);
-    gpio_set_level(DO_18, do18);
-    gpio_set_level(DO_19, do19);
+			gpio_set_level(DO_10, do10);
+			gpio_set_level(DO_11, do11);
+			gpio_set_level(DO_12, do12);
+			gpio_set_level(DO_13, do13);
+			gpio_set_level(DO_14, do14);
+			gpio_set_level(DO_15, do15);
+			gpio_set_level(DO_16, do16);
+			gpio_set_level(DO_17, do17);
+			gpio_set_level(DO_18, do18);
+			gpio_set_level(DO_19, do19);
 
-	gpio_set_level(DO_6, do6);
-	gpio_set_level(DO_7, do6);
+			gpio_set_level(DO_6, do6);
+			gpio_set_level(DO_7, do6);
+		}
+	}
+	vTaskDelete(NULL);
 }
 
 /*
@@ -798,6 +804,7 @@ void i2c_task(void *arg) { // I2C master task
 }
 
 extern "C" void app_main(void) {
+	reset_gpio();
 	vTaskDelay(pdMS_TO_TICKS(10));
 	estop.begin();
 	vTaskDelay(pdMS_TO_TICKS(10));
@@ -838,4 +845,5 @@ extern "C" void app_main(void) {
 	//xTaskCreatePinnedToCore(twai_task, "twai_task", 16000, NULL, 5, NULL, 1);
 	xTaskCreate(i2c_task, "i2c_task", 16000, NULL, 5, NULL);
 	//xTaskCreatePinnedToCore(i2c_task, "i2c_task", 16000,  NULL, 5, NULL, 0);
+	xTaskCreatePinnedToCore(set_DO, "set_DO_task", 16000, NULL, 5, NULL, 1);
 }

@@ -433,9 +433,9 @@ void i2c_task(void *arg) {
         i2c_read();
         if(I2C_new_DO) {
             dOut = I2C_parsed_data_DO;
-            ESP_LOGI("I2C", "DO: 0x%04X\n", I2C_parsed_data_DO);
-            ESP_LOGI("I2C", "NavState: %d", I2C_parsed_data_NavState);
-            ESP_LOGI("I2C", "BMS: %d", I2C_parsed_data_BMS);
+            // ESP_LOGI("I2C", "DO: 0x%04X\n", I2C_parsed_data_DO);
+            // ESP_LOGI("I2C", "NavState: %d", I2C_parsed_data_NavState);
+            // ESP_LOGI("I2C", "BMS: %d", I2C_parsed_data_BMS);
             if(I2C_parsed_data_NavState == 1) {
                 set_led(1); // red
             }
@@ -645,9 +645,8 @@ void init_TWAI() {
         return;
     }
 }
- 
-void transmit_TWAI(void* arg) {
-    twai_message_t message = {
+
+twai_message_t message = {
     // Message type and format settings
     .extd = 0,              // Standard vs extended format
     .rtr = 0,               // Data vs RTR frame
@@ -658,7 +657,9 @@ void transmit_TWAI(void* arg) {
     .identifier = 0xAAAA,
     .data_length_code = 8,
     .data = {0, 1, 2, 3},
-    };
+};
+ 
+void transmit_TWAI(void* arg) {
     while(1) {
         //Queue message for transmission
         if (twai_transmit(&message, pdMS_TO_TICKS(1000)) == ESP_OK) {
@@ -666,9 +667,24 @@ void transmit_TWAI(void* arg) {
         } else {
             ESP_LOGE("TWAI", "Failed to queue message for transmission");   
         }
-        vTaskDelay(pdMS_TO_TICKS(100));
+		vTaskDelay(pdMS_TO_TICKS(50));
     }
     vTaskDelete(NULL);
+}
+
+void receive_TWAI(void* arg) {
+	twai_message_t message_rcv;
+	while(1) {
+		//Receive message
+		if (twai_receive(&message_rcv, pdMS_TO_TICKS(1000)) == ESP_OK) {
+			for(int i = 0; i < message_rcv.data_length_code; i++) {
+				// ESP_LOGI("TWAI", "Message data[%d]: %d", i, message_rcv.data[i]);
+				message.data[i] = message_rcv.data[i];
+			}
+
+		} 
+	}
+	vTaskDelete(NULL);
 }
  
 /* -------------------- main -------------------- -------------------- --------------------
@@ -733,6 +749,7 @@ void app_main(void) {
  
     init_TWAI();
     xTaskCreate(transmit_TWAI, "transmit_TWAI", 16000, NULL, 5, NULL);
+	xTaskCreate(receive_TWAI, "receive_TWAI", 16000, NULL, 5, NULL);
  
     ESP_LOGI(BOOTKEY_TAG, "Create bootkey task");
     xTaskCreate(check_bootkey, "check_bootkey", 4096, NULL, 5, NULL);
