@@ -14,7 +14,6 @@
 #include "esp_sleep.h"
 #include "esp_log.h"
 #include "esp_err.h"
- 
 //#include <chrono>
 //#include "dido_spi.h"
 //#include "shoalbot_slave_i2c.h"
@@ -131,9 +130,6 @@ void check_bootkey(void* arg) { //remember to disable this bootkey check during 
     vTaskDelete(NULL);
 }
  
- 
- 
- 
 /* -------------------- ESTOP -------------------- -------------------- --------------------
 */
 pcnt_unit_config_t unit_config = {
@@ -142,7 +138,7 @@ pcnt_unit_config_t unit_config = {
 };
 pcnt_unit_handle_t pcnt_unit = NULL;
 pcnt_glitch_filter_config_t filter_config = {
-    .max_glitch_ns = 1000,
+    .max_glitch_ns = 10000,
 };
 pcnt_chan_config_t chan_a_config = {
     .edge_gpio_num = DI_0,
@@ -154,11 +150,12 @@ pcnt_chan_config_t chan_b_config = {
 pcnt_channel_handle_t pcnt_chan_b = NULL;
 int pulse_count = 0, prev_pulse_count;
 bool estop_flag;
+
 void check_estop(void* arg) {
     while(1) {
         ESP_ERROR_CHECK(pcnt_unit_get_count(pcnt_unit, &pulse_count));
         // ESP_LOGI(ESTOP_PCNT_TAG, "Pulse count: %d", pulse_count);
-        if ((pulse_count - prev_pulse_count) < 3) { // no new estop pulse is detected for the cycle
+        if ((pulse_count - prev_pulse_count) < 2) { // no new estop pulse is detected for the cycle
             // ESP_LOGI(ESTOP_PCNT_TAG, "ESTOP !");
             estop_flag = 1;
             gpio_set_level(PASS_1, 0);
@@ -168,13 +165,14 @@ void check_estop(void* arg) {
             estop_flag = 0;
             gpio_set_level(PASS_1, 1);
             gpio_set_level(PASS_2, 1);
+			
         }
         prev_pulse_count = pulse_count;
         if (pulse_count>95) { // a high enough odd number
             ESP_ERROR_CHECK(pcnt_unit_clear_count(pcnt_unit));
             prev_pulse_count = 0;
         }
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
     vTaskDelete(NULL);
 }
@@ -665,7 +663,7 @@ void transmit_TWAI(void* arg) {
         if (twai_transmit(&message, pdMS_TO_TICKS(1000)) == ESP_OK) {
             // ESP_LOGI("TWAI", "Message queued for transmission");
         } else {
-            ESP_LOGE("TWAI", "Failed to queue message for transmission");   
+            // ESP_LOGE("TWAI", "Failed to queue message for transmission");   
         }
 		vTaskDelay(pdMS_TO_TICKS(50));
     }
@@ -748,8 +746,8 @@ void app_main(void) {
     vTaskDelay(pdMS_TO_TICKS(50));
  
     init_TWAI();
-    xTaskCreate(transmit_TWAI, "transmit_TWAI", 16000, NULL, 5, NULL);
-	xTaskCreate(receive_TWAI, "receive_TWAI", 16000, NULL, 5, NULL);
+    xTaskCreatePinnedToCore(transmit_TWAI, "transmit_TWAI", 16000, NULL, 5, NULL, 0);
+	xTaskCreatePinnedToCore(receive_TWAI, "receive_TWAI", 16000, NULL, 5, NULL, 0);
  
     ESP_LOGI(BOOTKEY_TAG, "Create bootkey task");
     xTaskCreate(check_bootkey, "check_bootkey", 4096, NULL, 5, NULL);
@@ -770,6 +768,7 @@ void app_main(void) {
     ESP_ERROR_CHECK(pcnt_unit_clear_count(pcnt_unit));
     ESP_LOGI(ESTOP_PCNT_TAG, "Start pcnt unit");
     ESP_ERROR_CHECK(pcnt_unit_start(pcnt_unit));
+
     xTaskCreate(check_estop, "check_estop", 16000, NULL, 5, NULL);
  
     ESP_LOGI(DIDO_SPI_TAG, "Initialize spi bus");
@@ -798,9 +797,9 @@ void app_main(void) {
     xTaskCreate(uart_send_task, "uart_send_task", 1024, NULL, 1, NULL);
     set_led(5); //mix color
         
-    xTaskCreatePinnedToCore(set_dOut, "set_dOut", 16000, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(set_dOut, "set_dOut", 16000, NULL, 5, NULL, 0);
  
-    esp_intr_dump(NULL);
+    // esp_intr_dump(NULL);
  
 //  while(1) {
         // set_led(1); //red
