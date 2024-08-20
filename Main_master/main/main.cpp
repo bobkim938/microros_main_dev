@@ -286,7 +286,7 @@ void kinco_callback(const void * msgin) {
 
 void led_callback(const void * msgin) {
 	uint8_t color_index = led_msg.color;
-	slave_do[4] = color_index; // LSB PART OF NAV STATUS
+	slave_do[3] = color_index; // LSB PART OF NAV STATUS
 }
 
 void position_callback(const void * msgin) {
@@ -846,4 +846,5 @@ extern "C" void app_main(void) {
 	xTaskCreate(i2c_task, "i2c_task", 16000, NULL, 5, NULL);
 	//xTaskCreatePinnedToCore(i2c_task, "i2c_task", 16000,  NULL, 5, NULL, 0);
 	xTaskCreatePinnedToCore(set_DO, "set_DO_task", 16000, NULL, 5, NULL, 1);
+
 }

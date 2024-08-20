@@ -92,11 +92,11 @@ uint32_t shoalbot_master_i2c::read_state() {
     AMR_state[1] = state_data[4] >> 2;
     AMR_state[0] = state_data[5];
 
-    ESP_LOGI("I2C", "DI: 0x%08X\n", static_cast<unsigned int>(DI_fromSlave));
-    ESP_LOGI("I2C", "DO: 0x%02X\n", DO_slave[0]);
-    ESP_LOGI("I2C", "DO1: 0x%02X\n", DO_slave[1]);
-    ESP_LOGI("I2C", "AMR: 0x%02X\n", AMR_state[0]);
-    ESP_LOGI("I2C", "AMR1: 0x%02X\n", AMR_state[1]);
+    // ESP_LOGI("I2C", "DI: 0x%08X\n", static_cast<unsigned int>(DI_fromSlave));
+    // ESP_LOGI("I2C", "DO: 0x%02X\n", DO_slave[0]);
+    // ESP_LOGI("I2C", "DO1: 0x%02X\n", DO_slave[1]);
+    // ESP_LOGI("I2C", "AMR: 0x%02X\n", AMR_state[0]);
+    // ESP_LOGI("I2C", "AMR1: 0x%02X\n", AMR_state[1]);
     return DI_fromSlave;
 }
 
