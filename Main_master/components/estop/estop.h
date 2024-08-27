@@ -1,9 +1,14 @@
-#include "driver/ledc.h"
-#include "esp_err.h"
-#include "driver/gpio.h"
-#include "math.h"
+#ifndef _ESTOP_
+#define _ESTOP_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <driver/ledc.h>
+#include <math.h>
 
 #define PWM1 GPIO_NUM_2
 #define PWM2 GPIO_NUM_1
@@ -15,20 +20,19 @@
 #define PWM_CHANNEL_1 LEDC_CHANNEL_1
 #define PWM_DUTY_RES LEDC_TIMER_13_BIT // set duty resolution to 13 bits
 #define PWM_FREQUENCY (10)
+#define PWM_DUTY (819) // set duty to 10%
 
-class ESTOP {
-    public:
-        ESTOP();
-        void begin();
-        void set_duty_cycle(double duty_cycle); // input in percentage (0~1)
-        void stop_pulse();
+extern ledc_timer_config_t ESTOP0_timer;
+extern ledc_channel_config_t ESTOP0_channel;
+extern ledc_timer_config_t ESTOP1_timer;
+extern ledc_channel_config_t ESTOP1_channel;
 
-    private:
-        ledc_timer_config_t ESTOP0_timer = {};
-        ledc_channel_config_t ESTOP0_channel = {};
+void estop_begin();
+void estop_set_duty_cycle(double duty_cycle);
+void estop_stop_pulse();
 
-        ledc_timer_config_t ESTOP1_timer = {}; 
-        ledc_channel_config_t ESTOP1_channel = {};
+#ifdef __cplusplus
+}
+#endif
 
-        uint32_t pwm_duty = 819; // default duty cycle is 10%
-};
+#endif //_ESTOP_

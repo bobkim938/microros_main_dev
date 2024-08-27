@@ -9,7 +9,6 @@ extern "C" {
 //#include "freertos/FreeRTOS.h"
 //#include "freertos/task.h"
 #include "esp_system.h"
-
 #include "driver/twai.h"
 
 void initTwai (const uint8_t tx, const uint8_t rx);
@@ -20,8 +19,9 @@ void setProfileDeceleration (const uint8_t, const uint32_t msg); //6084
 void setTargetPosition (const uint8_t id, const int32_t msg); //607A
 void setProfileSpeed (const uint8_t id, const uint32_t msg); //6081
 void setControlWord (const uint8_t id, const uint16_t msg); //6040 
-//void initTwai (const uint8_t tx1, const uint8_t rx1, const uint8_t tx2, const uint8_t rx2);
-//void sendArbitraryCAN (const uint8_t id);
+uint16_t getStatusWord (const uint8_t id); //6041
+void setDin2Function (const uint8_t id, const uint16_t msg); //2010:04
+void setDinSimulate (const uint8_t id, const uint16_t msg); //2010:02
 
 #ifdef __cplusplus
 }
