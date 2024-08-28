@@ -24,7 +24,8 @@ typedef struct {
     esp_err_t ret;
     uint8_t state_data[6];
     uint8_t DO_slave[2];
-    uint8_t AMR_state[2];
+    // uint8_t AMR_state[2];
+    uint8_t AMR_state[1];
     uint8_t DI_cmd[1];
     uint8_t batSW_cmd[1];
     uint32_t DI_fromSlave;

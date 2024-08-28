@@ -78,7 +78,7 @@ uint32_t shoalbot_master_i2c_read_state(shoalbot_master_i2c* obj) {
     obj->DO_slave[0] = obj->state_data[3];
     obj->DO_slave[1] = 0x03 & obj->state_data[4];
     
-    obj->AMR_state[1] = obj->state_data[4] >> 2;
+    // obj->AMR_state[1] = obj->state_data[4] >> 2;
     obj->AMR_state[0] = obj->state_data[5];
 
     ESP_LOGI("I2C", "DI: 0x%08X\n", (unsigned int)(obj->DI_fromSlave));

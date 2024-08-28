@@ -126,9 +126,6 @@ shoalbot_msgs__msg__SpeedCmd speed_msg;
 
 static size_t uart_port = UART_NUM_0; // UART port for micro-ROS
 
-// MovingAverageFilter left_speed_filter(1), right_speed_filter(1);
-// MovingAverageFilter left_input_filter(1), right_input_filter(1);
-
 // int32_t left_input_filtered, right_input_filtered;
 // float left_speed_filtered, right_speed_filtered;
 
@@ -150,6 +147,7 @@ shoalbot_bms bms;
 sboalbot_amip4k amip4k;
 shoalbot_icm42688 icm42688;
 shoalbot_estop estop;
+MovingAverageFilter left_speed_filter, right_speed_filter;
 
 void reset_gpio() {
 	gpio_reset_pin(DO_6);
@@ -428,8 +426,8 @@ void imu_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 // 		prev_odom_update = now;
 // 		left_speed_m = (left_counter - left_counter_prev) / vel_dt / cpr * M_PI * wheel_diameter_; // measure m/s
 // 		right_speed_m = (right_counter - right_counter_prev) / vel_dt / cpr * M_PI * wheel_diameter_; // measure m/s
-// 		left_speed_filtered = left_speed_filter.process(left_speed_m);
-// 		right_speed_filtered = right_speed_filter.process(right_speed_m);
+// 		left_speed_filtered = MovingAverageFilter_process(&left_speed_filter ,left_speed_m);
+// 		right_speed_filtered = MovingAverageFilter_process(&right_speed_filter, right_speed_m);
 // 		float Vx = (right_speed_filtered + left_speed_filtered) * 0.5; //robot m/s
 // 		float Vy = 0;
 // 		float Wz = (right_speed_filtered - left_speed_filtered) / wheel_base_; // robot rad/s
@@ -925,6 +923,9 @@ void app_main(void) {
 	left_speed_m = 0; right_speed_m = 0;
 	x_pos_ = 0.0; y_pos_ = 0.0; heading_ = 0.0;
 	vTaskDelay(pdMS_TO_TICKS(10));
+
+	MovingAverageFilter_begin(&left_speed_filter, 1);
+	MovingAverageFilter_begin(&right_speed_filter, 1);
 
 	esp_intr_dump(NULL);
 
