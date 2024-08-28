@@ -40,18 +40,32 @@
 #define BMS_TASK_PRIO          (10)
 #define PACKET_READ_TICS        (200)  // 100
 
-void bms_485_begin();
-void bms_485_getBMSData();
+typedef struct {
+    uart_port_t bms_uart_num;     
+    float_t _temperature;          //  Temperature for the battery.
+    float_t _voltage;              // Voltage in Volts (Mandatory)
+    float_t _current;              // Negative when discharging (A)  (If unmeasured NaN)
+    float_t _charge;               // Current charge in Ah  (If unmeasured NaN)
+    float_t _capacity;             // Capacity in Ah (last full capacity)  (If unmeasured NaN)
+    float_t _design_capacity;      // Capacity in Ah (design capacity)  (If unmeasured NaN)
+    float_t _percentage;           // Charge percentage on 0 to 1 range  (If unmeasured NaN)
+    float_t _cell_temperature[3];  // An array of individual cell temperatures for each cell in the pack
+    uint16_t _cycle; 
+    uart_config_t uart_config;
+} shoalbot_bms;
+
+void bms_485_begin(shoalbot_bms* obj);
+void bms_485_getBMSData(shoalbot_bms* obj);
 // void getBmsData(float_t* current, float_t* voltage, float_t* charge, float_t* capacity, uint8_t* cycle);
-float_t bms_485_getTemperature();
-float_t bms_485_getVoltage();
-float_t bms_485_getCurrent();
-float_t bms_485_getCharge();
-float_t bms_485_getCapacity();
-float_t bms_485_getDesignCapacity();
-float_t bms_485_getPercentage();
-float_t* bms_485_getCellTemperature();
-uint16_t bms_485_getCycle();
+float_t bms_485_getTemperature(shoalbot_bms* obj);
+float_t bms_485_getVoltage(shoalbot_bms* obj);
+float_t bms_485_getCurrent(shoalbot_bms* obj);
+float_t bms_485_getCharge(shoalbot_bms* obj);
+float_t bms_485_getCapacity(shoalbot_bms* obj);
+float_t bms_485_getDesignCapacity(shoalbot_bms* obj);
+float_t bms_485_getPercentage(shoalbot_bms* obj);
+float_t* bms_485_getCellTemperature(shoalbot_bms* obj);
+uint16_t bms_485_getCycle(shoalbot_bms* obj);
 void bms_485_bms_echo_send(uart_port_t port, const char* str, uint8_t length);
 uint8_t bms_485_hex_to_dec(uint8_t val);  // Converts a hexadecimal value to its decimal equivalent.
 

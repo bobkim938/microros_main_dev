@@ -37,18 +37,37 @@ extern "C" {
 //////--REPEAT ABOVE SEQUENCE FOR 32 bit WRITING--//////
 */
 
-esp_err_t amip4k_spi_begin();
-esp_err_t amip4k_spi_read_spi(uint8_t reg, uint8_t op_code, spi_device_handle_t handle);
-esp_err_t amip4k_spi_write_spi(uint8_t reg, uint8_t op_code, spi_device_handle_t handle);
-esp_err_t amip4k_spi_write_CFG1(char IC);
-esp_err_t amip4k_spi_write_CFG2(char IC);
-esp_err_t amip4k_spi_write_CFG3(char IC, bool abSwitch);
-esp_err_t amip4k_spi_rate_conf(uint8_t rate);
-esp_err_t amip4k_spi_readSTAT();
-int32_t amip4k_spi_readMVAL(char IC);
-int32_t amip4k_spi_readCNT(char IC);
-int32_t amip4k_spi_readPOSIT(char IC);
-esp_err_t amip4k_spi_reset_cnt(char IC);
+typedef struct {
+    uint8_t HWA;
+    uint16_t sendbuf[1];
+    uint16_t recvbuf[1];
+    int32_t MVAL;
+    int32_t CNT;
+    int32_t POSIT;
+    // CFG SET TO InterpolationRate 4 (DEFAULT FOR OUR CASE)
+    uint8_t CFG1[4]; // stored from LSB to MSB
+    uint8_t CFG2[4];
+    uint8_t CFG3[4];
+    spi_device_handle_t handle_IC_R;
+    spi_device_handle_t handle_IC_L; 
+    spi_transaction_t t_IC;
+    spi_bus_config_t busESP;
+    spi_device_interface_config_t IC_R;
+    spi_device_interface_config_t IC_L;
+} sboalbot_amip4k;
+
+esp_err_t amip4k_spi_begin(sboalbot_amip4k* obj);
+esp_err_t amip4k_spi_read_spi(sboalbot_amip4k* obj, uint8_t reg, uint8_t op_code, spi_device_handle_t handle);
+esp_err_t amip4k_spi_write_spi(sboalbot_amip4k* obj, uint8_t reg, uint8_t op_code, spi_device_handle_t handle);
+esp_err_t amip4k_spi_write_CFG1(sboalbot_amip4k* obj, char IC);
+esp_err_t amip4k_spi_write_CFG2(sboalbot_amip4k* obj, char IC);
+esp_err_t amip4k_spi_write_CFG3(sboalbot_amip4k* obj, char IC, bool abSwitch);
+esp_err_t amip4k_spi_rate_conf(sboalbot_amip4k* obj, uint8_t rate);
+esp_err_t amip4k_spi_readSTAT(sboalbot_amip4k* obj);
+int32_t amip4k_spi_readMVAL(sboalbot_amip4k* obj, char IC);
+int32_t amip4k_spi_readCNT(sboalbot_amip4k* obj, char IC);
+int32_t amip4k_spi_readPOSIT(sboalbot_amip4k* obj, char IC);
+esp_err_t amip4k_spi_reset_cnt(sboalbot_amip4k* obj, char IC);
 
 #ifdef __cplusplus
 }

@@ -22,12 +22,14 @@ extern "C" {
 #define PWM_FREQUENCY (10)
 #define PWM_DUTY (819) // set duty to 10%
 
-extern ledc_timer_config_t ESTOP0_timer;
-extern ledc_channel_config_t ESTOP0_channel;
-extern ledc_timer_config_t ESTOP1_timer;
-extern ledc_channel_config_t ESTOP1_channel;
+typedef struct {
+    ledc_timer_config_t ESTOP0_timer;
+    ledc_channel_config_t ESTOP0_channel;
+    ledc_timer_config_t ESTOP1_timer;
+    ledc_channel_config_t ESTOP1_channel;
+} shoalbot_estop;
 
-void estop_begin();
+void estop_begin(shoalbot_estop* obj);
 void estop_set_duty_cycle(double duty_cycle);
 void estop_stop_pulse();
 

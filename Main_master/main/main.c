@@ -146,6 +146,10 @@ i2c_master_config shoalbot_i2c_config = {
 };
 
 shoalbot_master_i2c shoalbot_i2c;
+shoalbot_bms bms;
+sboalbot_amip4k amip4k;
+shoalbot_icm42688 icm42688;
+shoalbot_estop estop;
 
 void reset_gpio() {
 	gpio_reset_pin(DO_6);
@@ -686,16 +690,16 @@ void spi_task(void *arg) { // IMU and safety encoder data task
 */
 void spi_task(void *arg) { // IMU and safety encoder data task
 	while (1) {
-		gyro_x = icm42688_spi_get_gyro_x(0); 
-		gyro_y = icm42688_spi_get_gyro_y(0); 
-		gyro_z = icm42688_spi_get_gyro_z(0); 
-		accel_x = icm42688_spi_get_accel_x(0); 
-		accel_y = icm42688_spi_get_accel_y(0); 
-		accel_z = icm42688_spi_get_accel_z(0); 
+		gyro_x = icm42688_spi_get_gyro_x(&icm42688, 0); 
+		gyro_y = icm42688_spi_get_gyro_y(&icm42688, 0); 
+		gyro_z = icm42688_spi_get_gyro_z(&icm42688, 0); 
+		accel_x = icm42688_spi_get_accel_x(&icm42688,0); 
+		accel_y = icm42688_spi_get_accel_y(&icm42688, 0); 
+		accel_z = icm42688_spi_get_accel_z(&icm42688, 0); 
 		vTaskDelay(pdMS_TO_TICKS(2));
 
-		left_count_now = amip4k_spi_readMVAL('L'); //beware of the direction
-		right_count_now = amip4k_spi_readMVAL('R') * -1; //beware of the direction
+		left_count_now = amip4k_spi_readMVAL(&amip4k, 'L'); //beware of the direction
+		right_count_now = amip4k_spi_readMVAL(&amip4k, 'R') * -1; //beware of the direction
 		unsigned long now = esp_timer_get_time();
 		prev_odom_update = now;
 		/*	
@@ -752,12 +756,12 @@ void rs485_task(void *arg) { // BMS task
 */
 void rs485_task(void *arg) { // BMS task
 	while (1) {
-		bms_485_getBMSData();
-        bms_msg.voltage = bms_485_getVoltage();
-        bms_msg.temperature = bms_485_getTemperature();
-        bms_msg.current = bms_485_getCurrent();
-        bms_msg.battery_level = bms_485_getCharge() / bms_485_getCapacity() * 100;
-		bms_msg.charge_cycle = bms_485_getCycle();
+		bms_485_getBMSData(&bms);
+        bms_msg.voltage = bms_485_getVoltage(&bms);
+        bms_msg.temperature = bms_485_getTemperature(&bms);
+        bms_msg.current = bms_485_getCurrent(&bms);
+        bms_msg.battery_level = bms_485_getCharge(&bms) / bms_485_getCapacity(&bms) * 100;
+		bms_msg.charge_cycle = bms_485_getCycle(&bms);
 		vTaskDelay(pdMS_TO_TICKS(2000));
 		// printf("BMS task\n");
 	}
@@ -887,9 +891,9 @@ static void echo_task(void *arg)
 void app_main(void) {
 	reset_gpio();
 	vTaskDelay(pdMS_TO_TICKS(10));
-	estop_begin();
+	estop_begin(&estop);
 	vTaskDelay(pdMS_TO_TICKS(10));
-	bms_485_begin();
+	bms_485_begin(&bms);
 //	battery_ros_init();
 	initTwai(CAN1_TX, CAN1_RX);
 	setModesOfOperation(1, 3); //set elocity control mode
@@ -907,15 +911,15 @@ void app_main(void) {
 	setProfileDeceleration(1, 15); 
 	setProfileDeceleration(2, 15);
 	vTaskDelay(pdMS_TO_TICKS(2));
-	icm42688_spi_begin();
+	icm42688_spi_begin(&icm42688);
 	imu_ros_init();
-	amip4k_spi_begin();
+	amip4k_spi_begin(&amip4k);
 	vTaskDelay(pdMS_TO_TICKS(10));
 	shoalbot_master_i2c_init(&shoalbot_i2c, &shoalbot_i2c_config);
 	shoalbot_master_i2c_begin(&shoalbot_i2c);
 //	odom_ros_init();
-	amip4k_spi_reset_cnt('L');
-	amip4k_spi_reset_cnt('R');
+	amip4k_spi_reset_cnt(&amip4k, 'L');
+	amip4k_spi_reset_cnt(&amip4k, 'R');
 	left_count_now = 0; left_count_prev = 0; right_count_now = 0; right_count_prev = 0;
 	left_counter = 0; left_counter_prev = 0; right_counter = 0; right_counter_prev = 0;
 	left_speed_m = 0; right_speed_m = 0;
