@@ -106,6 +106,11 @@ uint32_t profile_speed = 900, profile_acc = 15, profile_dec = 15; //TO remove af
 
 rcl_publisher_t imu_publisher/*, odom_publisher, bms_publisher, di_publisher*/;
 rcl_publisher_t bms_publisher, di_publisher, encoder_publisher; 
+rcl_node_t node;
+rcl_allocator_t allocator;
+rclc_support_t support;
+rcl_timer_t imu_timer, odom_timer, bms_timer, di_timer, encoder_timer;
+rclc_executor_t executor;
 sensor_msgs__msg__Imu imu_msg;
 //sensor_msgs__msg__BatteryState bms_msg;
 //nav_msgs__msg__Odometry odom_msg;
@@ -123,6 +128,8 @@ shoalbot_msgs__msg__KincoMode kinco_msg;
 shoalbot_msgs__msg__LedCmd led_msg;
 shoalbot_msgs__msg__PositionCmd position_msg;
 shoalbot_msgs__msg__SpeedCmd speed_msg;
+
+bool isMicroROS = false;
 
 static size_t uart_port = UART_NUM_0; // UART port for micro-ROS
 
@@ -487,10 +494,9 @@ void encoder_timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
 	}
 }
 
-void micro_ros_task(void * arg) {
-	rcl_allocator_t allocator = rcl_get_default_allocator();
-	rclc_support_t support;
-
+void create_entities() {
+	allocator = rcl_get_default_allocator();
+	// rclc_support_t support;
 	// Create init_options
 	rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
 	//rmw_init_options_t *rmw_options = rcl_init_options_get_rmw_init_options(&init_options);
@@ -502,7 +508,7 @@ void micro_ros_task(void * arg) {
 	//RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 	
 	// Create node
-	rcl_node_t node = rcl_get_zero_initialized_node();
+	node = rcl_get_zero_initialized_node();
 	//rcl_node_t node;
 	RCCHECK(rclc_node_init_default(&node, "shoalbot_master", "", &support));
 
@@ -526,13 +532,13 @@ void micro_ros_task(void * arg) {
 	RCCHECK(rclc_subscription_init_default(&speed_subscriber, &node, ROSIDL_GET_MSG_TYPE_SUPPORT(shoalbot_msgs, msg, SpeedCmd), "speed"));
 
 	// Create timer
-	rcl_timer_t imu_timer = rcl_get_zero_initialized_timer(); 
-//	rcl_timer_t odom_timer = rcl_get_zero_initialized_timer();
-//	rcl_timer_t bms_timer = rcl_get_zero_initialized_timer();
-//	rcl_timer_t di_timer = rcl_get_zero_initialized_timer();
-	rcl_timer_t bms_timer = rcl_get_zero_initialized_timer();
-	rcl_timer_t di_timer = rcl_get_zero_initialized_timer();
-	rcl_timer_t encoder_timer = rcl_get_zero_initialized_timer();
+	imu_timer = rcl_get_zero_initialized_timer(); 
+//	odom_timer = rcl_get_zero_initialized_timer();
+//	bms_timer = rcl_get_zero_initialized_timer();
+//	di_timer = rcl_get_zero_initialized_timer();
+	bms_timer = rcl_get_zero_initialized_timer();
+	di_timer = rcl_get_zero_initialized_timer();
+	encoder_timer = rcl_get_zero_initialized_timer();
 	RCCHECK(rclc_timer_init_default(&imu_timer, &support, RCL_MS_TO_NS(20), imu_timer_callback));
 //	RCCHECK(rclc_timer_init_default(&odom_timer, &support, RCL_MS_TO_NS(50), odom_timer_callback));
 //	RCCHECK(rclc_timer_init_default(&bms_timer, &support, RCL_S_TO_NS(5), bms_timer_callback));
@@ -543,7 +549,7 @@ void micro_ros_task(void * arg) {
 
 	// Create executor
 	//rclc_executor_t executor;
-	rclc_executor_t executor = rclc_executor_get_zero_initialized_executor();
+	executor = rclc_executor_get_zero_initialized_executor();
 	RCCHECK(rclc_executor_init(&executor, &support.context, 9, &allocator));
 	unsigned int rcl_wait_timeout = 1000; 
 	RCCHECK(rclc_executor_set_timeout(&executor, RCL_MS_TO_NS(rcl_wait_timeout)));
@@ -566,12 +572,10 @@ void micro_ros_task(void * arg) {
 
 	sync_time();
 
-	// Spin forever
-	while(1) {
-		rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)); //100
-		usleep(1000); // 100000
-	}
+	isMicroROS = true;
+}
 
+void destroy_entities() {
 	// Free resources
 //	RCCHECK(rcl_subscription_fini(&twist_subscriber, &node));
 //	RCCHECK(rcl_subscription_fini(&do_subscriber, &node));
@@ -588,6 +592,54 @@ void micro_ros_task(void * arg) {
 	RCCHECK(rcl_publisher_fini(&di_publisher, &node));
 	RCCHECK(rcl_publisher_fini(&encoder_publisher, &node));
 	RCCHECK(rcl_node_fini(&node));
+	RCCHECK(rcl_timer_fini(&imu_timer));
+//	RCCHECK(rcl_timer_fini(&odom_timer));
+//	RCCHECK(rcl_timer_fini(&bms_timer));
+//	RCCHECK(rcl_timer_fini(&di_timer));
+	RCCHECK(rcl_timer_fini(&bms_timer));
+	RCCHECK(rcl_timer_fini(&di_timer));
+	RCCHECK(rcl_timer_fini(&encoder_timer));
+	RCCHECK(rclc_executor_fini(&executor));
+	RCCHECK(rclc_support_fini(&support));
+	isMicroROS = false;
+}
+
+void micro_ros_task(void * arg) {
+	bool isAgent = false;
+	while(1) {
+		if(isAgent) {
+			rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)); //100
+		}
+		else if(rmw_uros_ping_agent(1, 100) == RMW_RET_OK) {
+			if(!isMicroROS)
+				create_entities();
+			else{
+				rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)); //100
+				isAgent = true;
+			}
+		}
+		// else if(isMicroROS && ret == RMW_RET_TIMEOUT) {
+		// 	destroy_entities();
+		// }
+		vTaskDelay(pdMS_TO_TICKS(1));
+	}
+
+// 	// Free resources
+// //	RCCHECK(rcl_subscription_fini(&twist_subscriber, &node));
+// //	RCCHECK(rcl_subscription_fini(&do_subscriber, &node));
+// 	RCCHECK(rcl_subscription_fini(&do_subscriber, &node));
+// 	RCCHECK(rcl_subscription_fini(&kinco_subscriber, &node));
+// 	RCCHECK(rcl_subscription_fini(&led_subscriber, &node));
+// 	RCCHECK(rcl_subscription_fini(&position_subscriber, &node));
+// 	RCCHECK(rcl_subscription_fini(&speed_subscriber, &node));
+// 	RCCHECK(rcl_publisher_fini(&imu_publisher, &node));
+// //	RCCHECK(rcl_publisher_fini(&odom_publisher, &node));
+// //	RCCHECK(rcl_publisher_fini(&bms_publisher, &node));
+// //	RCCHECK(rcl_publisher_fini(&di_publisher, &node));
+// 	RCCHECK(rcl_publisher_fini(&bms_publisher, &node));
+// 	RCCHECK(rcl_publisher_fini(&di_publisher, &node));
+// 	RCCHECK(rcl_publisher_fini(&encoder_publisher, &node));
+// 	RCCHECK(rcl_node_fini(&node));
 
 	vTaskDelete(NULL);
 }
@@ -894,7 +946,7 @@ void app_main(void) {
 	bms_485_begin(&bms);
 //	battery_ros_init();
 	initTwai(CAN1_TX, CAN1_RX);
-	setModesOfOperation(1, 3); //set elocity control mode
+	setModesOfOperation(1, 3); //set velocity control mode
 	setModesOfOperation(2, 3);
 	vTaskDelay(pdMS_TO_TICKS(2));
 	setDin2Function(1, 0x4000); //set din 2 to activate command
